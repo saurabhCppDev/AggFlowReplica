@@ -7,7 +7,8 @@
 #include <customdelegate.h>
 #include <QPushButton>
 
-class MainWindow : public QMainWindow {
+class MainWindow : public QMainWindow
+{
     Q_OBJECT
 
 public:
@@ -16,6 +17,9 @@ public:
 private slots:
     void OnClearClicked();
 private:
+    void SetupUI();
+
+    QWidget *centralWidget;
     QListView *listView;
     CustomDelegate *delegate;
     CustomGraphicsView *graphicsView;

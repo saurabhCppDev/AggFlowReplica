@@ -7,10 +7,13 @@
 #include <QIcon>
 
 CustomGraphicsView::CustomGraphicsView(QWidget *parent)
-    : QGraphicsView(parent), scene(new QGraphicsScene(this)), currentLine(nullptr) {
+    : QGraphicsView(parent), scene(new QGraphicsScene(this)), currentLine(nullptr)
+{
     setScene(scene);
     setAcceptDrops(true);
+
     scene->setSceneRect(0, 0,600,400);
+
     acnSave = new QAction(tr("Save Not Yet Implemented"), this);
     acnDel = new QAction(tr("Delete line"), this);
 
@@ -18,20 +21,26 @@ CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     connect(acnDel, &QAction::triggered, this, &CustomGraphicsView::onActionDelete);
 }
 
-void CustomGraphicsView::dragEnterEvent(QDragEnterEvent *event) {
-    if (event->mimeData()->hasFormat("application/x-qabstractitemmodeldatalist")) {
+void CustomGraphicsView::dragEnterEvent(QDragEnterEvent *event)
+{
+    if (event->mimeData()->hasFormat("application/x-qabstractitemmodeldatalist"))
+    {
         event->acceptProposedAction();
     }
 }
 
-void CustomGraphicsView::dragMoveEvent(QDragMoveEvent *event) {
-    if (event->mimeData()->hasFormat("application/x-qabstractitemmodeldatalist")) {
+void CustomGraphicsView::dragMoveEvent(QDragMoveEvent *event)
+{
+    if (event->mimeData()->hasFormat("application/x-qabstractitemmodeldatalist"))
+    {
         event->acceptProposedAction();
     }
 }
 
-void CustomGraphicsView::dropEvent(QDropEvent *event) {
-    if (event->mimeData()->hasFormat("application/x-qabstractitemmodeldatalist")) {
+void CustomGraphicsView::dropEvent(QDropEvent *event)
+{
+    if (event->mimeData()->hasFormat("application/x-qabstractitemmodeldatalist"))
+    {
         QByteArray encodedData = event->mimeData()->data("application/x-qabstractitemmodeldatalist");
         QDataStream stream(&encodedData, QIODevice::ReadOnly);
 
@@ -51,11 +60,13 @@ void CustomGraphicsView::dropEvent(QDropEvent *event) {
     }
 }
 
-void CustomGraphicsView::mousePressEvent(QMouseEvent *event) {
+void CustomGraphicsView::mousePressEvent(QMouseEvent *event)
+{
     QPointF scenePos = mapToScene(event->pos());
     QGraphicsItem *item = scene->itemAt(scenePos, QTransform());
 
-    if (item && dynamic_cast<QGraphicsEllipseItem *>(item)) {
+    if (item && dynamic_cast<QGraphicsEllipseItem *>(item))
+    {
         lineStartPoint = scenePos;
         currentLine = new ArrowLineItem(QLineF(lineStartPoint, lineStartPoint));
         scene->addItem(currentLine);
@@ -65,8 +76,10 @@ void CustomGraphicsView::mousePressEvent(QMouseEvent *event) {
     QGraphicsView::mousePressEvent(event);
 }
 
-void CustomGraphicsView::mouseMoveEvent(QMouseEvent *event) {
-    if (currentLine) {
+void CustomGraphicsView::mouseMoveEvent(QMouseEvent *event)
+{
+    if (currentLine)
+    {
         QLineF newLine(lineStartPoint, mapToScene(event->pos()));
         currentLine->setLine(newLine);
     }
@@ -74,15 +87,19 @@ void CustomGraphicsView::mouseMoveEvent(QMouseEvent *event) {
     QGraphicsView::mouseMoveEvent(event);
 }
 
-void CustomGraphicsView::mouseReleaseEvent(QMouseEvent *event) {
-    if (currentLine) {
+void CustomGraphicsView::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (currentLine)
+    {
         QPointF scenePos = mapToScene(event->pos());
         QList<QGraphicsItem *>items = scene->items(scenePos);
 
         bool lineDrawn = false;
-        for(auto item:items) {
+        for(auto item:items)
+        {
             auto test = dynamic_cast<QGraphicsEllipseItem *>(item);
-            if (item && test) {
+            if (item && test)
+            {
                 QLineF newLine(lineStartPoint, scenePos);
                 currentLine->setLine(newLine);
                 lineConnections[currentLine].second = dynamic_cast<QGraphicsEllipseItem *>(item);
@@ -91,7 +108,8 @@ void CustomGraphicsView::mouseReleaseEvent(QMouseEvent *event) {
             }
         }
 
-        if(!lineDrawn) {
+        if(!lineDrawn)
+        {
             scene->removeItem(currentLine);
             delete currentLine;
         }
@@ -102,13 +120,16 @@ void CustomGraphicsView::mouseReleaseEvent(QMouseEvent *event) {
     QGraphicsView::mouseReleaseEvent(event);
 }
 
-void CustomGraphicsView::updateLinePosition() {
-    for (auto it = lineConnections.begin(); it != lineConnections.end(); ++it) {
+void CustomGraphicsView::updateLinePosition()
+{
+    for (auto it = lineConnections.begin(); it != lineConnections.end(); ++it)
+    {
         QGraphicsLineItem *line = it.key();
         QGraphicsEllipseItem *startCircle = it.value().first;
         QGraphicsEllipseItem *endCircle = it.value().second;
 
-        if (startCircle && endCircle) {
+        if (startCircle && endCircle)
+        {
             line->setLine(QLineF(startCircle->scenePos(), endCircle->scenePos()));
         }
     }

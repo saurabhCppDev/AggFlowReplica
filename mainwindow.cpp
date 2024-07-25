@@ -6,13 +6,25 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
+    , centralWidget(new QWidget(this))
     , listView(new QListView(this))
     , delegate(new CustomDelegate(64, this))
     , graphicsView(new CustomGraphicsView(this))
     , clrBtn(new QPushButton("Clear", this))
-    {
-    QWidget *centralWidget = new QWidget(this);
+{
+    SetupUI();
 
+    connect(delegate, &CustomDelegate::sizeHintChanged, listView, &QListView::doItemsLayout);
+    connect(clrBtn, &QPushButton::clicked, this, &MainWindow::OnClearClicked);
+}
+
+void MainWindow::OnClearClicked()
+{
+    graphicsView->ClearScene();
+}
+
+void MainWindow::SetupUI()
+{
     QStringList labels = {"Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6", "Item 7"};
     QList<QIcon> icons;
     icons << QIcon(":/icons/images/tractor_black.png")
@@ -41,12 +53,4 @@ MainWindow::MainWindow(QWidget *parent)
     hlayout->addWidget(graphicsView);
 
     setMinimumSize(800, 600);
-
-    connect(delegate, &CustomDelegate::sizeHintChanged, listView, &QListView::doItemsLayout);
-    connect(clrBtn, &QPushButton::clicked, this, &MainWindow::OnClearClicked);
-}
-
-void MainWindow::OnClearClicked()
-{
-    graphicsView->ClearScene();
 }

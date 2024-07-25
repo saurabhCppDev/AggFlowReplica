@@ -4,14 +4,20 @@
 #include <QStyledItemDelegate>
 #include <QStandardItem>
 
-class IconListModel : public QStandardItemModel {
+class IconListModel : public QStandardItemModel
+{
 public:
-    explicit IconListModel(QObject* parent = nullptr) : QStandardItemModel(parent) {}
+    explicit IconListModel(QObject* parent = nullptr) : QStandardItemModel(parent)
+    {
 
-    void setData(const QStringList& labels, const QList<QIcon>& icons) {
+    }
+
+    void setData(const QStringList& labels, const QList<QIcon>& icons)
+    {
         Q_ASSERT(labels.size() == icons.size());
 
-        for (int i = 0; i < labels.size(); ++i) {
+        for (int i = 0; i < labels.size(); ++i)
+        {
             QStandardItem* item = new QStandardItem(icons.at(i), labels.at(i));
             item->setData(icons.at(i), Qt::UserRole + 1); // Store the icon for drag and drop
             appendRow(item);
@@ -19,7 +25,8 @@ public:
     }
 };
 
-class CustomDelegate : public QStyledItemDelegate {
+class CustomDelegate : public QStyledItemDelegate
+{
     Q_OBJECT
 
 public:

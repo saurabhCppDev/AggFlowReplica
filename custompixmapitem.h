@@ -6,7 +6,8 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QObject>
 
-class CustomPixmapItem : public QObject, public QGraphicsPixmapItem {
+class CustomPixmapItem : public QObject, public QGraphicsPixmapItem
+{
     Q_OBJECT
 public:
     CustomPixmapItem(const QPixmap &pixmap);
@@ -25,6 +26,8 @@ public:
     QGraphicsEllipseItem *endCircle;
 
 private:
+    void AddEndCircles(const QPixmap &pixmap);
+
     QPointF dragStartPosition;
     bool dragging;
 };

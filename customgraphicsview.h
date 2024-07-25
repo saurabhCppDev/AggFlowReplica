@@ -14,7 +14,8 @@
 
 using LineConnectionsMap = QMap<QGraphicsLineItem *, QPair<QGraphicsEllipseItem *, QGraphicsEllipseItem *>>;
 
-class CustomGraphicsView : public QGraphicsView {
+class CustomGraphicsView : public QGraphicsView
+{
     Q_OBJECT
 
 public:

@@ -7,9 +7,11 @@
 #include <QPointF>
 #include <cmath>
 
-class ArrowLineItem : public QGraphicsLineItem {
+class ArrowLineItem : public QGraphicsLineItem
+{
 public:
     ArrowLineItem(QLineF line, QGraphicsItem* parent = nullptr);
+    int lineWidth;
 
 protected:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = nullptr) override;
