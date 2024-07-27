@@ -30,3 +30,41 @@ void ArrowLineItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opt
     arrowHead << line.p2() << arrowP1 << arrowP2;
     painter->drawPolygon(arrowHead);
 }
+
+void ArrowLineItem::write(QDataStream &out) const {
+    out << line();
+    out << reinterpret_cast<quintptr>(startCircle) << reinterpret_cast<quintptr>(endCircle);
+}
+
+void ArrowLineItem::read(QDataStream &in) {
+    QLineF line;
+    in >> line;
+    setLine(line);
+
+    quintptr startItemPtr, endItemPtr;
+    in >> startItemPtr >> endItemPtr;
+    startCircle = reinterpret_cast<QGraphicsEllipseItem*>(startItemPtr);
+    endCircle = reinterpret_cast<QGraphicsEllipseItem*>(endItemPtr);
+}
+
+void ArrowLineItem::SetStartCircle(QGraphicsEllipseItem *circle)
+{
+    startCircle = new QGraphicsEllipseItem;
+    startCircle = circle;
+}
+
+void ArrowLineItem::SetEndCircle(QGraphicsEllipseItem *circle)
+{
+    endCircle = new QGraphicsEllipseItem;
+    endCircle = circle;
+}
+
+QGraphicsEllipseItem *ArrowLineItem::GetStartCircle()
+{
+    return startCircle;
+}
+
+QGraphicsEllipseItem *ArrowLineItem::GetEndCircle()
+{
+    return endCircle;
+}

@@ -3,6 +3,7 @@
 
 #include <QStyledItemDelegate>
 #include <QStandardItem>
+#include <QLabel>
 
 class IconListModel : public QStandardItemModel
 {
@@ -20,6 +21,8 @@ public:
         {
             QStandardItem* item = new QStandardItem(icons.at(i), labels.at(i));
             item->setData(icons.at(i), Qt::UserRole + 1); // Store the icon for drag and drop
+            item->setData(labels.at(i), Qt::ToolTipRole);
+
             appendRow(item);
         }
     }

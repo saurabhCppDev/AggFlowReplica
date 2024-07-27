@@ -16,6 +16,9 @@ public:
 
 private slots:
     void OnClearClicked();
+    void onSave();
+    void onLoad();
+
 private:
     void SetupUI();
 

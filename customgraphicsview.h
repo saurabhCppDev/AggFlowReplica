@@ -29,15 +29,24 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
     void contextMenuEvent(QContextMenuEvent *event) override;
 
 private slots:
     void updateLinePosition();
     void onActionSave();
     void onActionDelete();
+    void onSetValue();
+
+public slots:
+    void saveToFile(const QString &fileName);
+    void loadFromFile(const QString &fileName);
+
 
 private:
     void RemoveLines();
+    void RemoveAllLines();
+    void reconnectLines(QList<ArrowLineItem*> lineItems);
 
     QGraphicsScene *scene;
     ArrowLineItem *currentLine;
@@ -46,7 +55,8 @@ private:
     QMenu contextMenu;
     QAction *acnSave;
     QAction *acnDel;
-    QGraphicsItem *itemToDelete = nullptr;
+    QAction *acnSetVal;
+    QGraphicsItem *selectedItem = nullptr;
 };
 
 #endif // CUSTOMGRAPHICSVIEW_H

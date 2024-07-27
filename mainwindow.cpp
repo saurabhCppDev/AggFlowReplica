@@ -1,8 +1,10 @@
 #include "MainWindow.h"
 #include <QStringListModel>
+#include <QFileDialog>
 #include <QHBoxLayout>
 #include <QMimeData>
 #include <QDrag>
+#include <QMenuBar>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -16,6 +18,15 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(delegate, &CustomDelegate::sizeHintChanged, listView, &QListView::doItemsLayout);
     connect(clrBtn, &QPushButton::clicked, this, &MainWindow::OnClearClicked);
+
+    QAction *saveAction = new QAction("Save", this);
+    QAction *loadAction = new QAction("Load", this);
+
+    connect(saveAction, &QAction::triggered, this, &MainWindow::onSave);
+    connect(loadAction, &QAction::triggered, this, &MainWindow::onLoad);
+
+    menuBar()->addAction(saveAction);
+    menuBar()->addAction(loadAction);
 }
 
 void MainWindow::OnClearClicked()
@@ -53,4 +64,20 @@ void MainWindow::SetupUI()
     hlayout->addWidget(graphicsView);
 
     setMinimumSize(800, 600);
+}
+
+void MainWindow::onSave()
+{
+    QString fileName = "saveTest.scene";//QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Scene Files (*.scene)"));
+    if (!fileName.isEmpty()) {
+        graphicsView->saveToFile(fileName);
+    }
+}
+
+void MainWindow::onLoad()
+{
+    QString fileName = "saveTest.scene";//QFileDialog::getOpenFileName(this, tr("Load File"), "", tr("Scene Files (*.scene)"));
+    if (!fileName.isEmpty()) {
+        graphicsView->loadFromFile(fileName);
+    }
 }
