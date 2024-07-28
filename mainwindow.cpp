@@ -1,8 +1,9 @@
-#include "MainWindow.h"
+#include "mainwindow.h"
 #include <QStringListModel>
 #include <QHBoxLayout>
 #include <QMimeData>
 #include <QDrag>
+#include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -25,7 +26,7 @@ void MainWindow::OnClearClicked()
 
 void MainWindow::SetupUI()
 {
-    QStringList labels = {"Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6", "Item 7"};    
+    QStringList labels = {"Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6", "Item 7"};
     QList<QIcon> icons;
     icons << QIcon(":/icons/images/tractor_black.png")
           << QIcon(":/icons/images/tractor_ok.png")

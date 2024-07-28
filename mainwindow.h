@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <QListView>
-#include "CustomGraphicsView.h"
+#include "customgraphicsview.h"
 #include <customdelegate.h>
 #include <QPushButton>
 
@@ -16,6 +16,7 @@ public:
 
 private slots:
     void OnClearClicked();
+
 private:
     void SetupUI();
 

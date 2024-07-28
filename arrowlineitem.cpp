@@ -1,4 +1,4 @@
-#include "ArrowLineItem.h"
+#include "arrowlineitem.h"
 
 ArrowLineItem::ArrowLineItem(QLineF line, QGraphicsItem* parent)
     : QGraphicsLineItem(line, parent)

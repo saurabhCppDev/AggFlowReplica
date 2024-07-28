@@ -6,13 +6,16 @@
 #include <QGraphicsLineItem>
 #include <QPointF>
 #include <QMap>
-#include "CustomPixmapItem.h"
-#include <arrowlineitem.h>
+#include <QGraphicsSceneMouseEvent>
 #include <QMenu>
 #include <QAction>
 #include <QContextMenuEvent>
+#include "custompixmapitem.h"
+#include <arrowlineitem.h>
 
-using LineConnectionsMap = QMap<QGraphicsLineItem *, QPair<QGraphicsEllipseItem *, QGraphicsEllipseItem *>>;
+
+//using LineConnectionsMap = QMap<QGraphicsLineItem *, QPair<QGraphicsEllipseItem *, QGraphicsEllipseItem *>>;
+using LineConnectionsMap = QMap<ArrowLineItem *, QPair<QGraphicsEllipseItem *, QGraphicsEllipseItem *>>;
 
 class CustomGraphicsView : public QGraphicsView
 {
@@ -33,20 +36,25 @@ protected:
 
 private slots:
     void updateLinePosition();
+    void handleValueChanged(double value);
     void onActionSave();
     void onActionDelete();
 
 private:
     void RemoveLines();
+    double calculateConnectedItems() const;
+
+    QList<QPair<QString, QString>> getConnections() const;
 
     QGraphicsScene *scene;
     ArrowLineItem *currentLine;
     QPointF lineStartPoint;
     LineConnectionsMap lineConnections;
-    QMenu contextMenu;
     QAction *acnSave;
     QAction *acnDel;
+    QMenu contextMenu;
     QGraphicsItem *itemToDelete = nullptr;
+
 };
 
 #endif // CUSTOMGRAPHICSVIEW_H

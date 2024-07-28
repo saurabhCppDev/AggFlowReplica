@@ -23,6 +23,7 @@ public:
             appendRow(item);
         }
     }
+
 };
 
 class CustomDelegate : public QStyledItemDelegate
