@@ -27,6 +27,15 @@ MainWindow::MainWindow(QWidget *parent)
 
     menuBar()->addAction(saveAction);
     menuBar()->addAction(loadAction);
+
+    QAction *undoAction = new QAction("Undo", this);
+    QAction *redoAction = new QAction("Redo", this);
+
+    connect(undoAction, &QAction::triggered, graphicsView, &CustomGraphicsView::UndoTriggered);
+    connect(redoAction, &QAction::triggered, graphicsView, &CustomGraphicsView::RedoTriggered);
+
+    menuBar()->addAction(undoAction);
+    menuBar()->addAction(redoAction);
 }
 
 void MainWindow::OnClearClicked()
@@ -76,6 +85,7 @@ void MainWindow::onSave()
 
 void MainWindow::onLoad()
 {
+    graphicsView->ClearScene();
     QString fileName = "saveTest.scene";//QFileDialog::getOpenFileName(this, tr("Load File"), "", tr("Scene Files (*.scene)"));
     if (!fileName.isEmpty()) {
         graphicsView->loadFromFile(fileName);

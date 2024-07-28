@@ -1,4 +1,6 @@
 #include "ArrowLineItem.h"
+#include <custompixmapitem.h>
+#include <QColor>
 
 ArrowLineItem::ArrowLineItem(QLineF line, QGraphicsItem* parent)
     : QGraphicsLineItem(line, parent)
@@ -33,7 +35,13 @@ void ArrowLineItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* opt
 
 void ArrowLineItem::write(QDataStream &out) const {
     out << line();
-    out << reinterpret_cast<quintptr>(startCircle) << reinterpret_cast<quintptr>(endCircle);
+    out << dynamic_cast<CustomPixmapItem *>(StartCircle->parentItem())->GetItemId();
+    out << dynamic_cast<CustomPixmapItem *>(StartCircle->parentItem())->GetStartConnected();
+    out << dynamic_cast<CustomPixmapItem *>(StartCircle->parentItem())->GetEndConnected();
+
+    out << dynamic_cast<CustomPixmapItem *>(EndCircle->parentItem())->GetItemId();
+    out << dynamic_cast<CustomPixmapItem *>(EndCircle->parentItem())->GetStartConnected();
+    out << dynamic_cast<CustomPixmapItem *>(EndCircle->parentItem())->GetEndConnected();
 }
 
 void ArrowLineItem::read(QDataStream &in) {
@@ -41,30 +49,80 @@ void ArrowLineItem::read(QDataStream &in) {
     in >> line;
     setLine(line);
 
-    quintptr startItemPtr, endItemPtr;
-    in >> startItemPtr >> endItemPtr;
-    startCircle = reinterpret_cast<QGraphicsEllipseItem*>(startItemPtr);
-    endCircle = reinterpret_cast<QGraphicsEllipseItem*>(endItemPtr);
+    int itemIdStart, itemIdEnd;
+    bool startCircleStartItem, EndCircleStartItem, startCircleEndItem, EndCircleEndItem;
+    in >> itemIdStart >> startCircleStartItem >> EndCircleStartItem >> itemIdEnd >> startCircleEndItem >> EndCircleEndItem;
+
+    StartCircleItemId = itemIdStart;
+    IsStartCircleStartConnected = startCircleStartItem;
+    IsStartCircleEndConnected = EndCircleStartItem;
+    EndCircleItemId = itemIdEnd;
+    IsEndCircleStartConnected = startCircleEndItem;
+    IsEndCircleEndConnected = EndCircleEndItem;
 }
 
 void ArrowLineItem::SetStartCircle(QGraphicsEllipseItem *circle)
 {
-    startCircle = new QGraphicsEllipseItem;
-    startCircle = circle;
+    StartCircle = new QGraphicsEllipseItem;
+    StartCircle = circle;
 }
 
 void ArrowLineItem::SetEndCircle(QGraphicsEllipseItem *circle)
 {
-    endCircle = new QGraphicsEllipseItem;
-    endCircle = circle;
+    EndCircle = new QGraphicsEllipseItem;
+    EndCircle = circle;
 }
 
 QGraphicsEllipseItem *ArrowLineItem::GetStartCircle()
 {
-    return startCircle;
+    return StartCircle;
 }
 
 QGraphicsEllipseItem *ArrowLineItem::GetEndCircle()
 {
-    return endCircle;
+    return EndCircle;
+}
+
+void ArrowLineItem::SetStartCircleAttributes()
+{
+    CustomPixmapItem *parentItem = dynamic_cast<CustomPixmapItem *>(StartCircle->parentItem());
+    QColor clr = StartCircle->brush().color();
+    clr == Qt::red ? parentItem->SetStartConnected(true) : parentItem->SetEndConnected(true);
+}
+
+void ArrowLineItem::SetEndCircleAttributes()
+{
+    CustomPixmapItem *parentItem = dynamic_cast<CustomPixmapItem *>(EndCircle->parentItem());
+    QColor clr = EndCircle->brush().color();
+    clr == Qt::red ? parentItem->SetStartConnected(true) : parentItem->SetEndConnected(true);
+}
+
+int ArrowLineItem::GetStartCircleItemId() const
+{
+    return StartCircleItemId;
+}
+
+int ArrowLineItem::GetEndCircleItemId() const
+{
+    return EndCircleItemId;
+}
+
+bool ArrowLineItem::GetIsStartCircleStartConnected() const
+{
+    return IsStartCircleStartConnected;
+}
+
+bool ArrowLineItem::GetIsStartCircleEndConnected() const
+{
+    return IsStartCircleEndConnected;
+}
+
+bool ArrowLineItem::GetIsEndCircleStartConnected() const
+{
+    return IsEndCircleStartConnected;
+}
+
+bool ArrowLineItem::GetIsEndCircleEndConnected() const
+{
+    return IsEndCircleEndConnected;
 }

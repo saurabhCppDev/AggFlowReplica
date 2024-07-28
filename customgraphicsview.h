@@ -11,6 +11,7 @@
 #include <QMenu>
 #include <QAction>
 #include <QContextMenuEvent>
+#include <QUndoStack>
 
 using LineConnectionsMap = QMap<QGraphicsLineItem *, QPair<QGraphicsEllipseItem *, QGraphicsEllipseItem *>>;
 
@@ -32,6 +33,10 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent *event) override;
     void contextMenuEvent(QContextMenuEvent *event) override;
 
+signals:
+    void UndoTriggered();
+    void RedoTriggered();
+
 private slots:
     void updateLinePosition();
     void onActionSave();
@@ -46,7 +51,7 @@ public slots:
 private:
     void RemoveLines();
     void RemoveAllLines();
-    void reconnectLines(QList<ArrowLineItem*> lineItems);
+    void reconnectLines(QList<ArrowLineItem*> lineItems, QMap<int, CustomPixmapItem*> customItems);
 
     QGraphicsScene *scene;
     ArrowLineItem *currentLine;
@@ -57,6 +62,8 @@ private:
     QAction *acnDel;
     QAction *acnSetVal;
     QGraphicsItem *selectedItem = nullptr;
+    QPointF itemStartPosition;
+    QUndoStack* UndoStack;
 };
 
 #endif // CUSTOMGRAPHICSVIEW_H

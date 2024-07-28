@@ -1,13 +1,19 @@
 #include "CustomGraphicsView.h"
+#include <QGraphicsProxyWidget>
 #include <QDragEnterEvent>
 #include <QMimeData>
 #include <QDataStream>
 #include <arrowlineitem.h>
+#include <QMessageBox>
 #include <QIcon>
 #include <QInputDialog>
+#include <addcommand.h>
 
 CustomGraphicsView::CustomGraphicsView(QWidget *parent)
-    : QGraphicsView(parent), scene(new QGraphicsScene(this)), currentLine(nullptr)
+    : QGraphicsView(parent)
+    , scene(new QGraphicsScene(this))
+    , currentLine(nullptr)
+    , UndoStack(new QUndoStack(this))
 {
     setScene(scene);
     setAcceptDrops(true);
@@ -22,6 +28,9 @@ CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     connect(acnSave, &QAction::triggered, this, &CustomGraphicsView::onActionSave);
     connect(acnDel, &QAction::triggered, this, &CustomGraphicsView::onActionDelete);
     connect(acnSetVal, &QAction::triggered, this, &CustomGraphicsView::onSetValue);
+
+    connect(this, &CustomGraphicsView::UndoTriggered, UndoStack, &QUndoStack::undo);
+    connect(this, &CustomGraphicsView::RedoTriggered, UndoStack, &QUndoStack::redo);
 }
 
 void CustomGraphicsView::dragEnterEvent(QDragEnterEvent *event)
@@ -58,6 +67,8 @@ void CustomGraphicsView::dropEvent(QDropEvent *event)
         scene->addItem(item);
 
         connect(item, &CustomPixmapItem::positionChanged, this, &CustomGraphicsView::updateLinePosition);
+        AddCommand* command = new AddCommand(scene, item);
+        UndoStack->push(command);
 
         event->acceptProposedAction();
     }
@@ -76,6 +87,12 @@ void CustomGraphicsView::mousePressEvent(QMouseEvent *event)
         lineConnections[currentLine].first = dynamic_cast<QGraphicsEllipseItem *>(item);
         currentLine->SetStartCircle(dynamic_cast<QGraphicsEllipseItem *>(item));
         item->parentItem()->setFlag(QGraphicsItem::ItemIsMovable, false);
+        currentLine->SetStartCircleAttributes();
+    }
+
+    if (item && dynamic_cast<QGraphicsProxyWidget *>(item))
+    {
+        itemStartPosition = scenePos;
     }
 
     QGraphicsView::mousePressEvent(event);
@@ -95,9 +112,9 @@ void CustomGraphicsView::mouseMoveEvent(QMouseEvent *event)
 
 void CustomGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 {
+    QPointF scenePos = mapToScene(event->pos());
     if (currentLine)
     {
-        QPointF scenePos = mapToScene(event->pos());
         QList<QGraphicsItem *>items = scene->items(scenePos);
 
         bool lineDrawn = false;
@@ -110,7 +127,7 @@ void CustomGraphicsView::mouseReleaseEvent(QMouseEvent *event)
                 currentLine->setLine(newLine);
                 lineConnections[currentLine].second = dynamic_cast<QGraphicsEllipseItem *>(item);
                 currentLine->SetEndCircle(dynamic_cast<QGraphicsEllipseItem *>(item));
-                dynamic_cast<CustomPixmapItem *>(currentLine->parentItem())->SetStartConnected(true);
+                currentLine->SetEndCircleAttributes();
                 lineDrawn = true;
                 break;
             }
@@ -124,6 +141,19 @@ void CustomGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 
         lineConnections[currentLine].first->parentItem()->setFlag(QGraphicsItem::ItemIsMovable, true);
         currentLine = nullptr;
+    }
+    else
+    {
+        QList<QGraphicsItem *>items = scene->items(scenePos);
+        for(QGraphicsItem *itm:items)
+        {
+            if(dynamic_cast<CustomPixmapItem *>(itm))
+            {
+                MoveCommand* command = new MoveCommand(itm, itemStartPosition, scenePos);
+                UndoStack->push(command);
+                break;
+            }
+        }
     }
 
     QGraphicsView::mouseReleaseEvent(event);
@@ -150,12 +180,12 @@ void CustomGraphicsView::updateLinePosition()
     for (auto it = lineConnections.begin(); it != lineConnections.end(); ++it)
     {
         QGraphicsLineItem *line = it.key();
-        QGraphicsEllipseItem *startCircle = it.value().first;
-        QGraphicsEllipseItem *endCircle = it.value().second;
+        QGraphicsEllipseItem *StartCircle = it.value().first;
+        QGraphicsEllipseItem *EndCircle = it.value().second;
 
-        if (startCircle && endCircle)
+        if (StartCircle && EndCircle)
         {
-            line->setLine(QLineF(startCircle->scenePos(), endCircle->scenePos()));
+            line->setLine(QLineF(StartCircle->scenePos(), EndCircle->scenePos()));
         }
     }
 }
@@ -248,6 +278,10 @@ void CustomGraphicsView::saveToFile(const QString &fileName)
             lineItem->write(out);
         }
     }
+
+    QMessageBox msgBox;
+    msgBox.setText("Data Saved Succesfully!!!");
+    msgBox.exec();
 }
 
 void CustomGraphicsView::loadFromFile(const QString &fileName)
@@ -264,6 +298,7 @@ void CustomGraphicsView::loadFromFile(const QString &fileName)
     lineConnections.clear();
 
     QList<ArrowLineItem*> lineItems;
+    QMap<int, CustomPixmapItem*> customItems;
     while (!in.atEnd()) {
         QString itemType;
         in >> itemType;
@@ -271,7 +306,10 @@ void CustomGraphicsView::loadFromFile(const QString &fileName)
         if (itemType == "CustomPixmapItem") {
             CustomPixmapItem *pixmapItem = new CustomPixmapItem(QPixmap());
             pixmapItem->read(in);
+            pixmapItem->HideLabelIfNeeded();
             scene->addItem(pixmapItem);
+            customItems.insert(pixmapItem->GetItemId(), pixmapItem);
+            connect(pixmapItem, &CustomPixmapItem::positionChanged, this, &CustomGraphicsView::updateLinePosition);
         } else if (itemType == "ArrowLineItem") {
             ArrowLineItem *lineItem = new ArrowLineItem(QLineF());
             lineItem->read(in);
@@ -279,16 +317,36 @@ void CustomGraphicsView::loadFromFile(const QString &fileName)
             lineItems.append(lineItem);
         }
     }
-//    reconnectLines(lineItems);
+    reconnectLines(lineItems, customItems);
 }
 
-//void CustomGraphicsView::reconnectLines(QList<ArrowLineItem*> lineItems)
-//{
-//    for (ArrowLineItem* line : lineItems) {
-//        if (line->GetStartCircle() && line->GetEndCircle()) {
-//            // Reconnect the line based on the positions of the start and end items
-//            QLineF newLine(line->GetStartCircle()->pos(), line->GetEndCircle()->pos());
-//            line->setLine(newLine);
-//        }
-//    }
-//}
+void CustomGraphicsView::reconnectLines(QList<ArrowLineItem*> lineItems, QMap<int, CustomPixmapItem*> customItems)
+{
+    for (ArrowLineItem* line : lineItems) {
+        if(line->GetIsStartCircleStartConnected())
+        {
+            line->SetStartCircle(customItems[line->GetStartCircleItemId()]->GetStartCircle());
+        }
+
+        if(line->GetIsStartCircleEndConnected())
+        {
+            line->SetStartCircle(customItems[line->GetStartCircleItemId()]->GetEndCircle());
+        }
+
+        if(line->GetIsEndCircleStartConnected())
+        {
+            line->SetEndCircle(customItems[line->GetEndCircleItemId()]->GetStartCircle());
+        }
+
+        if(line->GetIsEndCircleEndConnected())
+        {
+            line->SetEndCircle(customItems[line->GetEndCircleItemId()]->GetEndCircle());
+        }
+
+        if (line->GetStartCircle() && line->GetEndCircle()) {
+            lineConnections[line].first = line->GetStartCircle();
+            lineConnections[line].second = line->GetEndCircle();
+        }
+    }
+    updateLinePosition();
+}

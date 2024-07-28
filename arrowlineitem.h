@@ -15,16 +15,31 @@ public:
     void write(QDataStream &out) const;
     void read(QDataStream &in);
 
-public:
     void SetStartCircle(QGraphicsEllipseItem* circle);
     void SetEndCircle(QGraphicsEllipseItem* circle);
 
     QGraphicsEllipseItem* GetStartCircle();
     QGraphicsEllipseItem* GetEndCircle();
 
+    void SetStartCircleAttributes();
+    void SetEndCircleAttributes();
+    int GetStartCircleItemId() const;
+    int GetEndCircleItemId() const;
+    bool GetIsStartCircleStartConnected() const;
+    bool GetIsStartCircleEndConnected() const;
+    bool GetIsEndCircleStartConnected() const;
+    bool GetIsEndCircleEndConnected() const;
+
 private:
-    QGraphicsEllipseItem* startCircle;
-    QGraphicsEllipseItem* endCircle;
+    QGraphicsEllipseItem* StartCircle;
+    QGraphicsEllipseItem* EndCircle;
+
+    int StartCircleItemId;
+    bool IsStartCircleStartConnected;
+    bool IsStartCircleEndConnected;
+    int EndCircleItemId;
+    bool IsEndCircleStartConnected;
+    bool IsEndCircleEndConnected;
 
 protected:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget = nullptr) override;

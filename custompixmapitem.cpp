@@ -6,24 +6,31 @@
 #include <QGraphicsProxyWidget>
 #include <QVBoxLayout>
 
-int CustomPixmapItem::id = 0;
+namespace
+{
+    const char* DEFAULT_TEXT = "Text";
+}
+
+int CustomPixmapItem::GlobalItemId = 0;
 
 CustomPixmapItem::CustomPixmapItem(const QPixmap &pixmap)
-    : dragging(false)
-    , container(new QWidget)
-    , lbl(new QLabel("Text"))
-    , pixmapLabel(new QLabel)
-    , proxyWid(new QGraphicsProxyWidget)
-    , startCircle (new QGraphicsEllipseItem(-10, -10, 10, 10, this))
-    , endCircle (new QGraphicsEllipseItem(-10, -10, 10, 10, this))
-    , startC(false)
-    , endC(false)
+    : IsDraggingInProgress(false)
+    , ContainerWidget(new QWidget)
+    , TextLabel(new QLabel(DEFAULT_TEXT))
+    , PixmapLabel(new QLabel)
+    , ProxyWid(new QGraphicsProxyWidget)
+    , StartCircle (new QGraphicsEllipseItem(-10, -10, 10, 10, this))
+    , EndCircle (new QGraphicsEllipseItem(-10, -10, 10, 10, this))
+    , ItemId(0)
+    , IsStartConnected(false)
+    , IsEndConnected(false)
 {
+    ItemId = ++GlobalItemId;
     setFlag(ItemIsMovable);
 //    setFlag(ItemIsSelectable);
     setAcceptHoverEvents(true);
 
-    pixmapLabel->setPixmap(pixmap);
+    PixmapLabel->setPixmap(pixmap);
     AddEndCircles();
 }
 
@@ -38,53 +45,64 @@ void CustomPixmapItem::AddEndCircles()
 //    textItem->setFont(QFont("Arial", 16));    // Set text font and size
 //    textItem->setPos(0, 55); // Position the text in the scene
 
-    startCircle->setBrush(Qt::red);
-    endCircle->setBrush(Qt::blue);
+    StartCircle->setBrush(Qt::red);
+    EndCircle->setBrush(Qt::blue);
 
     QVBoxLayout *layout = new QVBoxLayout();
-    layout->addWidget(lbl);
-    layout->addWidget(pixmapLabel);
-    container->setLayout(layout);
-    container->setFixedSize(100,100);
-    container->setAttribute(Qt::WA_TranslucentBackground);
-    proxyWid->setWidget(container);
-    lbl->setFont(QFont("Arial", 16));
-    lbl->hide();
+    layout->addWidget(TextLabel);
+    layout->addWidget(PixmapLabel);
+    ContainerWidget->setLayout(layout);
+    ContainerWidget->setFixedSize(100,100);
+    ContainerWidget->setAttribute(Qt::WA_TranslucentBackground);
+    ProxyWid->setWidget(ContainerWidget);
+    TextLabel->setFont(QFont("Arial", 16));
+    TextLabel->hide();
+    TextLabel->setObjectName("LABEL");
 
-    addToGroup(proxyWid);
-    addToGroup(startCircle);
-    addToGroup(endCircle);
+    addToGroup(ProxyWid);
+    addToGroup(StartCircle);
+    addToGroup(EndCircle);
 
     // Update circle positions relative to the group
     QRectF bdRect = boundingRect();
-    startCircle->setPos(-endCircle->boundingRect().width(), bdRect.height() / 2);
-    endCircle->setPos(bdRect.width(), bdRect.height() / 2);
+    StartCircle->setPos(-EndCircle->boundingRect().width(), bdRect.height() / 2);
+    EndCircle->setPos(bdRect.width(), bdRect.height() / 2);
 
 //    the circles opacity and colour i will adjust later if needed
-//    endCircle->setOpacity(0.5);
+    //    EndCircle->setOpacity(0.5);
+}
+
+QGraphicsEllipseItem *CustomPixmapItem::GetEndCircle() const
+{
+    return EndCircle;
+}
+
+QGraphicsEllipseItem *CustomPixmapItem::GetStartCircle() const
+{
+    return StartCircle;
 }
 
 void CustomPixmapItem::SetText(const QString &text)
 {
-    lbl->setText(text);
-    lbl->show();
+    TextLabel->setText(text);
+    TextLabel->show();
 }
 
 void CustomPixmapItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton)
     {
-        dragStartPosition = event->pos();
-        dragging = true;
+        DragStartPosition = event->pos();
+        IsDraggingInProgress = true;
     }
     QGraphicsItemGroup::mousePressEvent(event);
 }
 
 void CustomPixmapItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-    if (dragging)
+    if (IsDraggingInProgress)
     {
-        QPointF newPos = pos() + event->pos() - dragStartPosition;
+        QPointF newPos = pos() + event->pos() - DragStartPosition;
         setPos(newPos);
         emit positionChanged();
     }
@@ -96,7 +114,7 @@ void CustomPixmapItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 {
     if (event->button() == Qt::LeftButton)
     {
-        dragging = false;
+        IsDraggingInProgress = false;
     }
     QGraphicsItemGroup::mouseReleaseEvent(event);
 }
@@ -113,28 +131,70 @@ QVariant CustomPixmapItem::itemChange(GraphicsItemChange change, const QVariant 
 
 void CustomPixmapItem::write(QDataStream &out) const {
     out << pos();
-    out << pixmapLabel->pixmap()->toImage();
-    out << lbl->text();
+    out << PixmapLabel->pixmap()->toImage();
+    out << TextLabel->text();
+    out << CustomPixmapItem::GlobalItemId;
+    out << ItemId;
+    out << IsStartConnected;
+    out << IsEndConnected;
 }
 
 void CustomPixmapItem::read(QDataStream &in) {
     QPointF position;
     QImage image;
     QString text;
+    int globalItemId;
+    int itemId;
+    bool isStartConn;
+    bool isEndConn;
 
-    in >> position >> image >> text;
+    in >> position >> image >> text >> globalItemId >> itemId >> isStartConn >> isEndConn;
 
     setPos(position);
-    pixmapLabel->setPixmap(QPixmap::fromImage(image));
+    PixmapLabel->setPixmap(QPixmap::fromImage(image));
     SetText(text);
+    ItemId = itemId;
+    GlobalItemId = GlobalItemId > globalItemId ? GlobalItemId : globalItemId;
+    ItemId = itemId;
+    SetStartConnected(isStartConn);
+    SetEndConnected(isEndConn);
+
 }
 
 void CustomPixmapItem::SetStartConnected(bool connected)
 {
-
+    IsStartConnected = connected;
 }
 
 void CustomPixmapItem::SetEndConnected(bool connected)
 {
+    IsEndConnected = connected;
+}
 
+bool CustomPixmapItem::GetStartConnected()
+{
+    return IsStartConnected;
+}
+
+bool CustomPixmapItem::GetEndConnected()
+{
+    return IsEndConnected;
+}
+
+void CustomPixmapItem::SetItemId(int itemId)
+{
+    ItemId = itemId;
+}
+
+int CustomPixmapItem::GetItemId()
+{
+    return ItemId;
+}
+
+void CustomPixmapItem::HideLabelIfNeeded()
+{
+    if(TextLabel->text().compare(DEFAULT_TEXT) == 0)
+    {
+        TextLabel->hide();
+    }
 }

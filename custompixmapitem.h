@@ -10,13 +10,22 @@ class CustomPixmapItem : public QObject, public QGraphicsItemGroup
 {
     Q_OBJECT
 public:
-    static int id;
+    static int GlobalItemId;
     CustomPixmapItem(const QPixmap &pixmap);
     void SetText(const QString &text);
     void write(QDataStream &out) const;
     void read(QDataStream &in);
     void SetStartConnected(bool connected);
     void SetEndConnected(bool connected);
+    bool GetStartConnected();
+    bool GetEndConnected();
+    void SetItemId(int itemId);
+    int GetItemId();
+    void HideLabelIfNeeded();
+
+
+    QGraphicsEllipseItem *GetStartCircle() const;
+    QGraphicsEllipseItem *GetEndCircle() const;
 
 signals:
     void positionChanged();
@@ -30,16 +39,17 @@ protected:
 private:
     void AddEndCircles();
 
-    QPointF dragStartPosition;
-    bool dragging;
-    QWidget * container;
-    QLabel* lbl;
-    QLabel* pixmapLabel;
-    QGraphicsProxyWidget* proxyWid;
-    QGraphicsEllipseItem *startCircle;
-    QGraphicsEllipseItem *endCircle;
-    bool startC;
-    bool endC;
+    QPointF DragStartPosition;
+    bool IsDraggingInProgress;
+    QWidget* ContainerWidget;
+    QLabel* TextLabel;
+    QLabel* PixmapLabel;
+    QGraphicsProxyWidget* ProxyWid;
+    QGraphicsEllipseItem *StartCircle;
+    QGraphicsEllipseItem *EndCircle;
+    int ItemId;
+    bool IsStartConnected;
+    bool IsEndConnected;
 };
 
 #endif // CUSTOMPIXMAPITEM_H
