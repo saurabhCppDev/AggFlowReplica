@@ -6,13 +6,18 @@
 #include <QGraphicsItem>
 #include <QPointF>
 
-class AddCommand : public QUndoCommand {
+class AddCommand : public QObject, public QUndoCommand {
+    Q_OBJECT
 public:
     AddCommand(QGraphicsScene* scene, QGraphicsItem* item, QUndoCommand* parent = nullptr);
 
 protected:
     void undo() override;
     void redo() override;
+
+signals:
+    void PublishUndoData(QString data);
+    void PublishRedoData(QString data);
 
 private:
     QGraphicsScene* GScene;
@@ -32,13 +37,18 @@ private:
     QGraphicsItem* Item;
 };
 
-class MoveCommand : public QUndoCommand {
+class MoveCommand : public QObject, public QUndoCommand {
+    Q_OBJECT
 public:
     MoveCommand(QGraphicsItem* item, const QPointF& oldPos, const QPointF& newPos, QUndoCommand* parent = nullptr);
 
 protected:
     void undo() override;
     void redo() override;
+
+signals:
+    void PublishUndoData(QString data);
+    void PublishRedoData(QString data);
 
 private:
     QGraphicsItem* Item;

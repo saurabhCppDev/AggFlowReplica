@@ -36,6 +36,10 @@ protected:
 signals:
     void UndoTriggered();
     void RedoTriggered();
+    void PublishOldData(QString data);
+    void PublishNewData(QString data);
+    void PublishUndoData(QString data);
+    void PublishRedoData(QString data);
 
 private slots:
     void updateLinePosition();

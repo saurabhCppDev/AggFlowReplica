@@ -65,9 +65,13 @@ void CustomGraphicsView::dropEvent(QDropEvent *event)
         CustomPixmapItem* item = new CustomPixmapItem(pixmap);
         item->setPos(mapToScene(event->pos()));
         scene->addItem(item);
+        emit PublishOldData(QString("(%1, %2)").arg(mapToScene(event->pos()).x()).arg(mapToScene(event->pos()).y()));
 
         connect(item, &CustomPixmapItem::positionChanged, this, &CustomGraphicsView::updateLinePosition);
         AddCommand* command = new AddCommand(scene, item);
+        connect(command, &AddCommand::PublishUndoData, this, &CustomGraphicsView::PublishUndoData);
+        connect(command, &AddCommand::PublishRedoData, this, &CustomGraphicsView::PublishRedoData);
+
         UndoStack->push(command);
 
         event->acceptProposedAction();
@@ -93,6 +97,7 @@ void CustomGraphicsView::mousePressEvent(QMouseEvent *event)
     if (item && dynamic_cast<QGraphicsProxyWidget *>(item))
     {
         itemStartPosition = scenePos;
+        emit PublishNewData(QString("(%1, %2)").arg(scenePos.x()).arg(scenePos.y()));
     }
 
     QGraphicsView::mousePressEvent(event);
@@ -112,9 +117,9 @@ void CustomGraphicsView::mouseMoveEvent(QMouseEvent *event)
 
 void CustomGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 {
-    QPointF scenePos = mapToScene(event->pos());
     if (currentLine)
     {
+        QPointF scenePos = mapToScene(event->pos());
         QList<QGraphicsItem *>items = scene->items(scenePos);
 
         bool lineDrawn = false;
@@ -144,12 +149,17 @@ void CustomGraphicsView::mouseReleaseEvent(QMouseEvent *event)
     }
     else
     {
+        QPointF scenePos = mapToScene(event->pos());
         QList<QGraphicsItem *>items = scene->items(scenePos);
         for(QGraphicsItem *itm:items)
         {
-            if(dynamic_cast<CustomPixmapItem *>(itm))
+            CustomPixmapItem *cpItm = dynamic_cast<CustomPixmapItem *>(itm);
+            if(cpItm)
             {
-                MoveCommand* command = new MoveCommand(itm, itemStartPosition, scenePos);
+                emit PublishNewData(QString("(%1, %2)").arg(cpItm->pos().x()).arg(cpItm->pos().y()));
+                MoveCommand* command = new MoveCommand(itm, itemStartPosition, cpItm->pos());
+                connect(command, &MoveCommand::PublishUndoData, this, &CustomGraphicsView::PublishUndoData);
+                connect(command, &MoveCommand::PublishRedoData, this, &CustomGraphicsView::PublishRedoData);
                 UndoStack->push(command);
                 break;
             }

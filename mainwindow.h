@@ -18,6 +18,10 @@ private slots:
     void OnClearClicked();
     void onSave();
     void onLoad();
+    void onOldPos(QString data);
+    void onNewPos(QString data);
+    void onUndoPos(QString data);
+    void onRedoPos(QString data);
 
 private:
     void SetupUI();
@@ -27,6 +31,10 @@ private:
     CustomDelegate *delegate;
     CustomGraphicsView *graphicsView;
     QPushButton* clrBtn;
+    QLabel* oldData;
+    QLabel* newData;
+    QLabel* UndoData;
+    QLabel* RedoData;
 };
 
 #endif // MAINWINDOW_H

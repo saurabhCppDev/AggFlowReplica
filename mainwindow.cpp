@@ -5,6 +5,7 @@
 #include <QMimeData>
 #include <QDrag>
 #include <QMenuBar>
+#include <QLabel>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -13,11 +14,21 @@ MainWindow::MainWindow(QWidget *parent)
     , delegate(new CustomDelegate(64, this))
     , graphicsView(new CustomGraphicsView(this))
     , clrBtn(new QPushButton("Clear", this))
+    , oldData(new QLabel)
+    , newData(new QLabel)
+    , UndoData(new QLabel)
+    , RedoData(new QLabel)
 {
     SetupUI();
 
     connect(delegate, &CustomDelegate::sizeHintChanged, listView, &QListView::doItemsLayout);
     connect(clrBtn, &QPushButton::clicked, this, &MainWindow::OnClearClicked);
+
+    connect(graphicsView, &CustomGraphicsView::PublishOldData, this, &MainWindow::onOldPos);
+    connect(graphicsView, &CustomGraphicsView::PublishNewData, this, &MainWindow::onNewPos);
+
+    connect(graphicsView, &CustomGraphicsView::PublishUndoData, this, &MainWindow::onUndoPos);
+    connect(graphicsView, &CustomGraphicsView::PublishRedoData, this, &MainWindow::onRedoPos);
 
     QAction *saveAction = new QAction("Save", this);
     QAction *loadAction = new QAction("Load", this);
@@ -69,6 +80,11 @@ void MainWindow::SetupUI()
     QHBoxLayout *hlayout = new QHBoxLayout(centralWidget);
     vlayout->addWidget(listView);
     vlayout->addWidget(clrBtn);
+//    vlayout->addWidget(oldData);
+//    vlayout->addWidget(newData);
+//    vlayout->addWidget(new QLabel("After Undo/Redo"));
+//    vlayout->addWidget(UndoData);
+//    vlayout->addWidget(RedoData);
     hlayout->addLayout(vlayout);
     hlayout->addWidget(graphicsView);
 
@@ -90,4 +106,24 @@ void MainWindow::onLoad()
     if (!fileName.isEmpty()) {
         graphicsView->loadFromFile(fileName);
     }
+}
+
+void MainWindow::onOldPos(QString data)
+{
+    oldData->setText(data);
+}
+
+void MainWindow::onNewPos(QString data)
+{
+    newData->setText(data);
+}
+
+void MainWindow::onUndoPos(QString data)
+{
+    UndoData->setText(data);
+}
+
+void MainWindow::onRedoPos(QString data)
+{
+    RedoData->setText(data);
 }
