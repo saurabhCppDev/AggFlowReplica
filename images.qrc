@@ -7,5 +7,7 @@
         <file>images/tractor_red.png</file>
         <file>images/tractor_transperant.png</file>
         <file>images/tractor_yellow.png</file>
+        <file>images/start_point.png</file>
+        <file>images/in_line_equipment.png</file>
     </qresource>
 </RCC>

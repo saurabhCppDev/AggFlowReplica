@@ -19,7 +19,7 @@ public:
 
         for (int i = 0; i < labels.size(); ++i)
         {
-            QStandardItem* item = new QStandardItem(icons.at(i), labels.at(i));
+            QStandardItem* item = new QStandardItem(icons.at(i), QString());
             item->setData(icons.at(i), Qt::UserRole + 1); // Store the icon for drag and drop
             item->setData(labels.at(i), Qt::ToolTipRole);
 

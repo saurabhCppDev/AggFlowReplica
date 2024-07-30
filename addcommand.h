@@ -16,6 +16,8 @@ protected:
     void redo() override;
 
 signals:
+    void NotifyUndoCompleted();
+    void NotifyRedoCompleted();
     void PublishUndoData(QString data);
     void PublishRedoData(QString data);
 
@@ -24,13 +26,20 @@ private:
     QGraphicsItem* Item;
 };
 
-class RemoveCommand : public QUndoCommand {
+class RemoveCommand : public QObject, public QUndoCommand {
+    Q_OBJECT
 public:
     RemoveCommand(QGraphicsScene* scene, QGraphicsItem* item, QUndoCommand* parent = nullptr);
 
 protected:
     void undo() override;
     void redo() override;
+
+signals:
+    void NotifyUndoCompleted();
+    void NotifyRedoCompleted();
+    void PublishUndoData(QString data);
+    void PublishRedoData(QString data);
 
 private:
     QGraphicsScene* GScene;
@@ -47,6 +56,8 @@ protected:
     void redo() override;
 
 signals:
+    void NotifyUndoCompleted();
+    void NotifyRedoCompleted();
     void PublishUndoData(QString data);
     void PublishRedoData(QString data);
 

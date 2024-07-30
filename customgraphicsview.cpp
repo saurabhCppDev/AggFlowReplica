@@ -65,13 +65,19 @@ void CustomGraphicsView::dropEvent(QDropEvent *event)
         CustomPixmapItem* item = new CustomPixmapItem(pixmap);
         item->setPos(mapToScene(event->pos()));
         scene->addItem(item);
+
+        emit PublishUndoData(QString());
+        emit PublishRedoData(QString());
+        emit PublishNewData(QString());
+        emit PublishOldData(QString());
         emit PublishOldData(QString("(%1, %2)").arg(mapToScene(event->pos()).x()).arg(mapToScene(event->pos()).y()));
 
         connect(item, &CustomPixmapItem::positionChanged, this, &CustomGraphicsView::updateLinePosition);
         AddCommand* command = new AddCommand(scene, item);
         connect(command, &AddCommand::PublishUndoData, this, &CustomGraphicsView::PublishUndoData);
         connect(command, &AddCommand::PublishRedoData, this, &CustomGraphicsView::PublishRedoData);
-
+        connect(command, &AddCommand::NotifyUndoCompleted, this, &CustomGraphicsView::updateLinePosition);
+        connect(command, &AddCommand::NotifyRedoCompleted, this, &CustomGraphicsView::updateLinePosition);
         UndoStack->push(command);
 
         event->acceptProposedAction();
@@ -160,6 +166,10 @@ void CustomGraphicsView::mouseReleaseEvent(QMouseEvent *event)
                 MoveCommand* command = new MoveCommand(itm, itemStartPosition, cpItm->pos());
                 connect(command, &MoveCommand::PublishUndoData, this, &CustomGraphicsView::PublishUndoData);
                 connect(command, &MoveCommand::PublishRedoData, this, &CustomGraphicsView::PublishRedoData);
+
+                connect(command, &MoveCommand::NotifyUndoCompleted, this, &CustomGraphicsView::updateLinePosition);
+                connect(command, &MoveCommand::NotifyRedoCompleted, this, &CustomGraphicsView::updateLinePosition);
+
                 UndoStack->push(command);
                 break;
             }
@@ -204,6 +214,10 @@ void CustomGraphicsView::ClearScene()
 {
     RemoveAllLines();
     scene->clear();
+    emit PublishUndoData(QString());
+    emit PublishRedoData(QString());
+    emit PublishNewData(QString());
+    emit PublishOldData(QString());
 }
 
 void CustomGraphicsView::contextMenuEvent(QContextMenuEvent *event)

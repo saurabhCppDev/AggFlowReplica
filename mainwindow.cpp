@@ -56,9 +56,10 @@ void MainWindow::OnClearClicked()
 
 void MainWindow::SetupUI()
 {
-    QStringList labels = {"Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6", "Item 7"};    
+    QStringList labels = {"Item 0", "Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6", "Item 7"};
     QList<QIcon> icons;
-    icons << QIcon(":/icons/images/tractor_black.png")
+    icons << QIcon(":/icons/images/start_point.png")
+          << QIcon(":/icons/images/tractor_black.png")
           << QIcon(":/icons/images/tractor_ok.png")
           << QIcon(":/icons/images/tractor_On_Field.png")
           << QIcon(":/icons/images/tractor_orange.png")
