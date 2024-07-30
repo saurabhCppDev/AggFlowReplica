@@ -6,6 +6,7 @@
 #include <QGraphicsProxyWidget>
 #include <QVBoxLayout>
 
+
 namespace
 {
     const char* DEFAULT_TEXT = "Text";
@@ -72,6 +73,8 @@ void CustomPixmapItem::AddEndCircles()
     //    EndCircle->setOpacity(0.5);
 }
 
+
+
 QGraphicsEllipseItem *CustomPixmapItem::GetEndCircle() const
 {
     return EndCircle;
@@ -86,6 +89,11 @@ void CustomPixmapItem::SetText(const QString &text)
 {
     TextLabel->setText(text);
     TextLabel->show();
+}
+
+QString CustomPixmapItem::GetText() const
+{
+    return TextLabel->text();
 }
 
 void CustomPixmapItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -106,6 +114,10 @@ void CustomPixmapItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         setPos(newPos);
         emit positionChanged();
     }
+
+
+
+
     update();
     QGraphicsItemGroup::mouseMoveEvent(event);
 }

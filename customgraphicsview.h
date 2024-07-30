@@ -50,7 +50,9 @@ private slots:
 public slots:
     void saveToFile(const QString &fileName);
     void loadFromFile(const QString &fileName);
-
+    void onResult();
+    void saveToXml(const QString &fileName);
+    void loadFromXml(const QString &fileName);
 
 private:
     void RemoveLines();
@@ -68,9 +70,11 @@ private:
     QAction *acnSave;
     QAction *acnDel;
     QAction *acnSetVal;
+    QAction *acnResult;
     QGraphicsItem *selectedItem = nullptr;
     QPointF itemStartPosition;
     QUndoStack* UndoStack;
+
 };
 
 #endif // CUSTOMGRAPHICSVIEW_H
