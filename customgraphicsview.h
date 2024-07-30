@@ -56,6 +56,9 @@ private:
     void RemoveLines();
     void RemoveAllLines();
     void reconnectLines(QList<ArrowLineItem*> lineItems, QMap<int, CustomPixmapItem*> customItems);
+    void EmitDebugData(QPoint pos);
+    void AddItemToAddStack(QGraphicsItem *item);
+    void AddItemToMoveStack(QGraphicsItem *item);
 
     QGraphicsScene *scene;
     ArrowLineItem *currentLine;

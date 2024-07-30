@@ -8,16 +8,16 @@ AddCommand::AddCommand(QGraphicsScene* scene, QGraphicsItem* item, QUndoCommand*
 
 void AddCommand::undo()
 {
+    GScene->removeItem(Item);
     emit PublishUndoData(QString("(%1, %2)").arg(Item->pos().x()).arg(Item->pos().y()));
     emit NotifyUndoCompleted();
-    GScene->removeItem(Item);
 }
 
 void AddCommand::redo()
 {
+    GScene->addItem(Item);
     emit PublishRedoData(QString("(%1, %2)").arg(Item->pos().x()).arg(Item->pos().y()));
     emit NotifyRedoCompleted();
-    GScene->addItem(Item);
 }
 
 RemoveCommand::RemoveCommand(QGraphicsScene* scene, QGraphicsItem* item, QUndoCommand* parent)
@@ -44,14 +44,14 @@ MoveCommand::MoveCommand(QGraphicsItem* item, const QPointF& oldPos, const QPoin
 
 void MoveCommand::undo()
 {
+    Item->setPos(OldPos);
     emit PublishUndoData(QString("(%1, %2)").arg(OldPos.x()).arg(OldPos.y()));
     emit NotifyUndoCompleted();
-    Item->setPos(OldPos);
 }
 
 void MoveCommand::redo()
 {
+    Item->setPos(NewPos);
     emit PublishRedoData(QString("(%1, %2)").arg(NewPos.x()).arg(NewPos.y()));
     emit NotifyRedoCompleted();
-    Item->setPos(NewPos);
 }
