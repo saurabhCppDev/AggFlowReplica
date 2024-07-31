@@ -14,6 +14,7 @@ CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     , scene(new QGraphicsScene(this))
     , currentLine(nullptr)
     , UndoStack(new QUndoStack(this))
+    , currentZoomLevel(1.0)
 {
     setScene(scene);
     setAcceptDrops(true);
@@ -329,6 +330,33 @@ void CustomGraphicsView::loadFromFile(const QString &fileName)
         }
     }
     reconnectLines(lineItems, customItems);
+}
+
+void CustomGraphicsView::zoomIn()
+{
+    currentZoomLevel *= 1.2; // Increase the zoom level by 20%
+    setTransform(QTransform::fromScale(currentZoomLevel, currentZoomLevel));
+}
+
+void CustomGraphicsView::zoomOut()
+{
+    currentZoomLevel /= 1.2; // Decrease the zoom level by 20%
+    setTransform(QTransform::fromScale(currentZoomLevel, currentZoomLevel));
+}
+
+void CustomGraphicsView::zoomToNatural()
+{
+    currentZoomLevel = 1.0; // Reset the zoom level to natural (1:1)
+    setTransform(QTransform::fromScale(currentZoomLevel, currentZoomLevel));
+}
+
+void CustomGraphicsView::zoomToFit()
+{
+    QRectF rect = scene->itemsBoundingRect(); // Get the bounding rect of all items in the scene
+    if (!rect.isEmpty()) {
+        fitInView(rect, Qt::KeepAspectRatio); // Fit the scene in the view
+        currentZoomLevel = transform().m11(); // Update the current zoom level
+    }
 }
 
 void CustomGraphicsView::reconnectLines(QList<ArrowLineItem*> lineItems, QMap<int, CustomPixmapItem*> customItems)
