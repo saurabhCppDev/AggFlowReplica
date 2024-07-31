@@ -5,6 +5,8 @@
 #include <QMimeData>
 #include <QDrag>
 #include <QMenuBar>
+#include <QVBoxLayout>
+#include <QStandardItemModel>
 #include <QLabel>
 #include <QXmlStreamWriter>
 #include <QMessageBox>
@@ -15,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , centralWidget(new QWidget(this))
     , listView(new QListView(this))
+    , menuListView(new QListView(this))
     , delegate(new CustomDelegate(64, this))
     , graphicsView(new CustomGraphicsView(this))
     , oldData(new QLabel)
@@ -54,37 +57,58 @@ void MainWindow::onClear()
 
 void MainWindow::SetupUI()
 {
-    QStringList labels = {"Item 0", "Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6", "Item 7"};
+
+    QStringList labels;
     QList<QIcon> icons;
-    icons << QIcon(":/icons/images/start_point.png")
-          << QIcon(":/icons/images/tractor_black.png")
-          << QIcon(":/icons/images/tractor_ok.png")
-          << QIcon(":/icons/images/tractor_On_Field.png")
-          << QIcon(":/icons/images/tractor_orange.png")
-          << QIcon(":/icons/images/tractor_red.png")
-          << QIcon(":/icons/images/tractor_transperant.png")
-          << QIcon(":/icons/images/tractor_yellow.png");
+    labels << "Item 1" << "Item 2" << "Item 3"<< "Item 4"
+           << "Item 5" << "Item 6" << "Item 7"<< "Item 8"
+           << "Item 9" << "Item 10" << "Item 11" << "Item 12"
+           << "Item 13"<< "Item 14" ;//<< "Item 15" << "Item 16";
+
+    icons << QIcon(":/icons/images/parent/parent_1.png")
+          << QIcon(":/icons/images/parent/parent_2.png")
+          << QIcon(":/icons/images/parent/parent_3.png")
+          << QIcon(":/icons/images/parent/parent_4.png")
+          << QIcon(":/icons/images/parent/parent_5.png")
+          << QIcon(":/icons/images/parent/parent_6.png")
+          << QIcon(":/icons/images/parent/parent_7.png")
+          << QIcon(":/icons/images/parent/parent_8.png")
+          << QIcon(":/icons/images/parent/parent_9.png")
+          << QIcon(":/icons/images/parent/parent_10.png")
+          << QIcon(":/icons/images/parent/parent_11.png")
+          << QIcon(":/icons/images/parent/parent_12.png")
+          << QIcon(":/icons/images/parent/parent_13.png")
+          << QIcon(":/icons/images/parent/parent_14.png");
+          // << QIcon(":/icons/images/new/parent_15.png")
+          // << QIcon(":/icons/images/new/parent_16.png");
 
     IconListModel *model = new IconListModel(this);
     model->setData(labels, icons);
 
     listView->setModel(model);
-    listView->setIconSize(QSize(64, 64));
+    listView->setIconSize(QSize(40, 40));
     listView->setItemDelegate(delegate);
     listView->setDragEnabled(true);
-    listView->setFixedWidth(200);
+    listView->setFixedWidth(80);
+    menuListView->setFixedWidth(60);
+    menuListView->setIconSize(QSize(50, 50));
 
+    clrBtn->setFixedWidth(50);
     setCentralWidget(centralWidget);
     QVBoxLayout *vlayout = new QVBoxLayout();
     QHBoxLayout *hlayout = new QHBoxLayout(centralWidget);
     vlayout->addWidget(listView);
-    //    vlayout->addWidget(oldData);
-    //    vlayout->addWidget(newData);
-    //    vlayout->addWidget(new QLabel("After Undo/Redo"));
-    //    vlayout->addWidget(UndoData);
-    //    vlayout->addWidget(RedoData);
+//    vlayout->addWidget(oldData);
+//    vlayout->addWidget(newData);
+//    vlayout->addWidget(new QLabel("After Undo/Redo"));
+//    vlayout->addWidget(UndoData);
+//    vlayout->addWidget(RedoData);
     hlayout->addLayout(vlayout);
+    hlayout->addWidget(menuListView);
     hlayout->addWidget(graphicsView);
+
+
+    hlayout->setSpacing(7);
 
     setMinimumSize(800, 600);
     statusBar();
@@ -194,9 +218,15 @@ void MainWindow::setCurrentFile(const QString &fileName)
     setWindowFilePath(currentFile.isEmpty() ? tr("untitled.xml") : currentFile);
 }
 
+
+void MainWindow::OnClearClicked()
+{
+    graphicsView->ClearScene();
+}
+
 void MainWindow::onSave()
 {
-    QString fileName = "saveTest.scene";//QFileDialog::getSaveFileName(this, tr("Save File"), "", tr("Scene Files (*.scene)"));
+    QString fileName = "saveTest.scene";
     if (!fileName.isEmpty()) {
         graphicsView->saveToFile(fileName);
     }
@@ -219,7 +249,7 @@ void MainWindow::onSaveAs()
 void MainWindow::onLoad()
 {
     graphicsView->ClearScene();
-    QString fileName = "saveTest.scene";//QFileDialog::getOpenFileName(this, tr("Load File"), "", tr("Scene Files (*.scene)"));
+    QString fileName = "saveTest.scene";
     if (!fileName.isEmpty()) {
         graphicsView->loadFromFile(fileName);
     }
@@ -247,6 +277,148 @@ void MainWindow::onUndoPos(QString data)
 void MainWindow::onRedoPos(QString data)
 {
     RedoData->setText(data);
+}
+
+void MainWindow::onItemClicked(const QModelIndex &index)
+{
+    QStandardItemModel *menuModel = new QStandardItemModel(this);
+    QList<QIcon> menuIcons;
+
+    switch (index.row()) {
+    case 0:
+        menuIcons = {QIcon(":/icons/images/parent/Child1/child_1_1.png"),
+                     QIcon(":/icons/images/parent/Child1/child_1_2.png"),
+                     QIcon(":/icons/images/parent/Child1/child_1_3.png"),
+                     QIcon(":/icons/images/parent/Child1/child_1_4.png"),
+                     QIcon(":/icons/images/parent/Child1/child_1_5.png"),
+                     QIcon(":/icons/images/parent/Child1/child_1_6.png"),
+                     QIcon(":/icons/images/parent/Child1/child_1_7.png")};
+        break;
+    case 1:
+        menuIcons = {QIcon(":/icons/images/parent/Child2/child_2_1.png"),
+                     QIcon(":/icons/images/parent/Child2/child_2_2.png"),
+                     QIcon(":/icons/images/parent/Child2/child_2_2.png"),
+                     QIcon(":/icons/images/parent/Child2/child_2_3.png"),
+                     QIcon(":/icons/images/parent/Child2/child_2_4.png"),
+                     QIcon(":/icons/images/parent/Child2/child_2_5.png"),
+                     QIcon(":/icons/images/parent/Child2/child_2_6.png"),
+                     QIcon(":/icons/images/parent/Child2/child_2_7.png")};
+        break;
+    case 2:
+        menuIcons = {QIcon(":/icons/images/parent/Child3/child_3_1.png"),
+                     QIcon(":/icons/images/parent/Child3/child_3_2.png"),
+                     QIcon(":/icons/images/parent/Child3/child_3_3.png"),
+                     QIcon(":/icons/images/parent/Child3/child_3_4.png"),
+                     QIcon(":/icons/images/parent/Child3/child_3_5.png"),
+                     QIcon(":/icons/images/parent/Child3/child_3_6.png"),
+                     QIcon(":/icons/images/parent/Child3/child_3_7.png"),
+                     QIcon(":/icons/images/parent/Child3/child_3_8.png")};
+        break;
+    case 3:
+        menuIcons = {QIcon(":/icons/images/parent/Child4/child4_1.png"),
+                     QIcon(":/icons/images/parent/Child4/child4_2.png"),
+                     QIcon(":/icons/images/parent/Child4/child4_3.png"),
+                     QIcon(":/icons/images/parent/Child4/child4_4.png"),
+                     QIcon(":/icons/images/parent/Child4/child4_5.png")};
+        break;
+    case 4:
+        menuIcons = {QIcon(":/icons/images/parent/Child5/child_5_1.png"),
+                     QIcon(":/icons/images/parent/Child5/child_5_2.png"),
+                     QIcon(":/icons/images/parent/Child5/child_5_3.png"),
+                     QIcon(":/icons/images/parent/Child5/child_5_4.png"),
+                     QIcon(":/icons/images/parent/Child5/child_5_5.png"),
+                     QIcon(":/icons/images/parent/Child5/child_5_6.png")};
+        break;
+    case 5:
+        menuIcons = {QIcon(":/icons/images/parent/Child6/child_6_1.png"),
+                     QIcon(":/icons/images/parent/Child6/child_6_2.png"),
+                     QIcon(":/icons/images/parent/Child6/child_6_2.png"),
+                     QIcon(":/icons/images/parent/Child6/child_6_3.png"),
+                     QIcon(":/icons/images/parent/Child6/child_6_4.png"),
+                     QIcon(":/icons/images/parent/Child6/child_6_5.png"),
+                     QIcon(":/icons/images/parent/Child6/child_6_6.png"),
+                     QIcon(":/icons/images/parent/Child6/child_6_7.png"),
+                     QIcon(":/icons/images/parent/Child6/child_6_8.png"),
+                     QIcon(":/icons/images/parent/Child6/child_6_9.png")};
+        break;
+    case 6:
+        menuIcons = {QIcon(":/icons/images/parent/Child7/child_7_1.png"),
+                     QIcon(":/icons/images/parent/Child7/child_7_2.png"),
+                     QIcon(":/icons/images/parent/Child7/child_7_2.png"),
+                     QIcon(":/icons/images/parent/Child7/child_7_3.png"),
+                     QIcon(":/icons/images/parent/Child7/child_7_4.png"),
+                     QIcon(":/icons/images/parent/Child7/child_7_5.png"),
+                     QIcon(":/icons/images/parent/Child7/child_7_6.png"),
+                     QIcon(":/icons/images/parent/Child7/child_7_7.png")};
+        break;
+    case 7:
+        menuIcons = {QIcon(":/icons/images/parent/Child8/child_8_1.png"),
+                     QIcon(":/icons/images/parent/Child8/child_8_2.png"),
+                     QIcon(":/icons/images/parent/Child8/child_8_3.png"),
+                     QIcon(":/icons/images/parent/Child8/child_8_4.png"),
+                     QIcon(":/icons/images/parent/Child8/child_8_5.png"),
+                     QIcon(":/icons/images/parent/Child8/child_8_6.png"),
+                     QIcon(":/icons/images/parent/Child8/child_8_7.png"),
+                     QIcon(":/icons/images/parent/Child8/child_8_8.png"),
+                     QIcon(":/icons/images/parent/Child8/child_8_9.png")};
+        break;
+    case 8:
+        menuIcons = {QIcon(":/icons/images/parent/Child9/child_9_1.png"),
+                     QIcon(":/icons/images/parent/Child9/child_9_2.png")};
+        break;
+    case 9:
+        menuIcons = {QIcon(":/icons/images/parent/Child10/child_10_1.png"),
+                     QIcon(":/icons/images/parent/Child10/child_10_2.png"),
+                     QIcon(":/icons/images/parent/Child10/child_10_3.png"),
+                     QIcon(":/icons/images/parent/Child10/child_10_4.png"),
+                     QIcon(":/icons/images/parent/Child10/child_10_5.png")};
+        break;
+    case 10:
+        menuIcons = {QIcon(":/icons/images/parent/Child11/child_11_1.png"),
+                     QIcon(":/icons/images/parent/Child11/child_11_2.png"),
+                     QIcon(":/icons/images/parent/Child11/child_11_3.png"),
+                     QIcon(":/icons/images/parent/Child11/child_11_4.png"),
+                     QIcon(":/icons/images/parent/Child11/child_11_5.png"),
+                     QIcon(":/icons/images/parent/Child11/child_11_6.png"),
+                     QIcon(":/icons/images/parent/Child11/child_11_7.png"),
+                     QIcon(":/icons/images/parent/Child11/child_11_8.png")};
+        break;
+    case 11:
+        menuIcons = {QIcon(":/icons/images/parent/Child12/child_12_1.png")};
+        break;
+    case 12:
+        menuIcons = {QIcon(":/icons/images/parent/Child13/child_13_1.png"),
+                     QIcon(":/icons/images/parent/Child13/child_13_2.png"),
+                     QIcon(":/icons/images/parent/Child13/child_13_3.png"),
+                     QIcon(":/icons/images/parent/Child13/child_13_4.png")};
+        break;
+    case 13:
+        menuIcons = {QIcon(":/icons/images/parent/Child14/child_14_1.png"),
+                     QIcon(":/icons/images/parent/Child14/child_14_2.png"),
+                     QIcon(":/icons/images/parent/Child14/child_14_3.png"),
+                     QIcon(":/icons/images/parent/Child14/child_14_4.png"),
+                     QIcon(":/icons/images/parent/Child14/child_14_5.png"),
+                     QIcon(":/icons/images/parent/Child14/child_14_6.png"),
+                     QIcon(":/icons/images/parent/Child14/child_14_7.png"),
+                     QIcon(":/icons/images/parent/Child14/child_14_8.png"),
+                     QIcon(":/icons/images/parent/Child14/child_14_9.png"),
+                     QIcon(":/icons/images/parent/Child14/child_14_10.png"),
+                     QIcon(":/icons/images/parent/Child14/child_14_11.png"),
+                     QIcon(":/icons/images/parent/Child14/child_14_12.png")};
+        break;
+
+    default:
+        menuIcons = {QIcon()};
+        break;
+    }
+
+    for (const auto &icon : menuIcons) {
+        QStandardItem *menuItem = new QStandardItem();
+        menuItem->setIcon(icon);
+        menuModel->appendRow(menuItem);
+    }
+
+    menuListView->setModel(menuModel);
 }
 
 void MainWindow::updateResult(const QString &result)
