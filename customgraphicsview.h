@@ -32,6 +32,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseDoubleClickEvent(QMouseEvent *event) override;
     void contextMenuEvent(QContextMenuEvent *event) override;
+    virtual void wheelEvent(QWheelEvent *event)override;
 
 signals:
     void UndoTriggered();
@@ -40,6 +41,7 @@ signals:
     void PublishNewData(QString data);
     void PublishUndoData(QString data);
     void PublishRedoData(QString data);
+    void resultUpdated(const QString &result);
 
 private slots:
     void updateLinePosition();
@@ -53,7 +55,9 @@ private slots:
 public slots:
     void saveToFile(const QString &fileName);
     void loadFromFile(const QString &fileName);
-
+    void onResult();
+    void saveToXml(const QString &fileName);
+    void loadFromXml(const QString &fileName);
 
 private:
     void RemoveLines();
@@ -70,6 +74,8 @@ private:
     QMenu contextMenu;
     QAction *acnSave;
     QAction *acnDel;
+    QAction *acnSetVal;
+    QAction *acnResult;
     QGraphicsItem *selectedItem = nullptr;
     CustomPixmapItem *copiedItem;
     QPointF itemStartPosition;
