@@ -9,5 +9,21 @@
         <file>images/tractor_yellow.png</file>
         <file>images/start_point.png</file>
         <file>images/in_line_equipment.png</file>
+        <file>images/Enhanced_Screenshot.png</file>
+        <file>images/run-stage.png</file>
+        <file>images/save-icon</file>
+        <file>images/save-water-tap-icon</file>
+        <file>images/run-plant1.png</file>
+        <file>images/controlpanel1.png</file>
+        <file>images/zoom-in1.png</file>
+        <file>images/undo1.png</file>
+        <file>images/openHelp.png</file>
+        <file>images/zoom-out.png</file>
+        <file>images/zoom-to-natural</file>
+        <file>images/re-run1.png</file>
+        <file>images/run-stage1.png</file>
+        <file>images/redFlag1.png</file>
+        <file>images/align1.png</file>
+        <file>images/zoom-to-fit.jpg</file>
     </qresource>
 </RCC>

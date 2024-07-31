@@ -50,6 +50,10 @@ private slots:
 public slots:
     void saveToFile(const QString &fileName);
     void loadFromFile(const QString &fileName);
+    void zoomIn();
+    void zoomOut();
+    void zoomToNatural();
+    void zoomToFit();
 
 
 private:
@@ -71,6 +75,7 @@ private:
     QGraphicsItem *selectedItem = nullptr;
     QPointF itemStartPosition;
     QUndoStack* UndoStack;
+    qreal currentZoomLevel;
 };
 
 #endif // CUSTOMGRAPHICSVIEW_H
