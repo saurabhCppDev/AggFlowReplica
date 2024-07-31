@@ -36,7 +36,7 @@ CustomPixmapItem::CustomPixmapItem(const QPixmap &pixmap)
 
 void CustomPixmapItem::AddEndCircles()
 {
-////  this way also we can add widget also depending on future requirement might need it so keeping commented code
+//  this way also we can add widget also depending on future requirement might need it so keeping commented code
 //    QGraphicsPixmapItem *pixmapItem = new QGraphicsPixmapItem(pixmap);
 //    pixmapItem->setPos(0, 0); // Position the image in the scene
 
@@ -86,6 +86,11 @@ void CustomPixmapItem::SetText(const QString &text)
 {
     TextLabel->setText(text);
     TextLabel->show();
+}
+
+QString CustomPixmapItem::GetText() const
+{
+    return TextLabel->text();
 }
 
 void CustomPixmapItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -158,7 +163,6 @@ void CustomPixmapItem::read(QDataStream &in) {
     ItemId = itemId;
     SetStartConnected(isStartConn);
     SetEndConnected(isEndConn);
-
 }
 
 void CustomPixmapItem::SetStartConnected(bool connected)

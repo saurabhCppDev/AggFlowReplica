@@ -12,7 +12,20 @@ class CustomPixmapItem : public QObject, public QGraphicsItemGroup
 public:
     static int GlobalItemId;
     CustomPixmapItem(const QPixmap &pixmap);
+    CustomPixmapItem(const CustomPixmapItem& other)    : QObject(), QGraphicsItemGroup(), ItemId(other.ItemId + 1),
+        IsStartConnected(other.IsStartConnected),
+        IsEndConnected(other.IsEndConnected),
+        ContainerWidget(nullptr), TextLabel(new QLabel()),
+        PixmapLabel(new QLabel()),
+        StartCircle(new QGraphicsEllipseItem()), EndCircle(new QGraphicsEllipseItem())
+    {
+
+    }
+    CustomPixmapItem* clone() const {
+        return new CustomPixmapItem(*this);
+    }
     void SetText(const QString &text);
+    QString GetText() const;
     void write(QDataStream &out) const;
     void read(QDataStream &in);
     void SetStartConnected(bool connected);
@@ -23,6 +36,8 @@ public:
     int GetItemId();
     void HideLabelIfNeeded();
 
+    int pixmapWidth() const { return PixmapLabel->pixmap()->width(); }
+    int pixmapHeight() const { return PixmapLabel->pixmap()->height(); }
 
     QGraphicsEllipseItem *GetStartCircle() const;
     QGraphicsEllipseItem *GetEndCircle() const;

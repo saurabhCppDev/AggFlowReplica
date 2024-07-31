@@ -8,6 +8,10 @@
 #include <QIcon>
 #include <QInputDialog>
 #include <addcommand.h>
+#include <QDebug>
+#include <QApplication>
+#include <QDomDocument>
+#include <QBuffer>
 
 CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     : QGraphicsView(parent)
@@ -18,16 +22,35 @@ CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     setScene(scene);
     setAcceptDrops(true);
     setRenderHints(QPainter::HighQualityAntialiasing);
-
     scene->setSceneRect(0, 0,600,400);
 
     acnSave = new QAction(tr("Save Not Yet Implemented"), this);
-    acnDel = new QAction(tr("Delete line"), this);
-    acnSetVal = new QAction(tr("Set value"), this);
+    acnDel = new QAction(QIcon(":/icons/images/delete.png"),"Delete line", this);
+    acnSetVal = new QAction(QIcon(":/icons/images/assign-id.png"),"Assign Machine Id...", this);
+    acnCutVal = new QAction(QIcon(":/icons/images/scissor.png"),"Cut",this);
+    acnCopyVal = new QAction(QIcon(":/icons/images/copy.png"),"Copy",this);
+    acnDelItem = new QAction(QIcon(":/icons/images/delete.png"),"Delete",this);
+    acnMonitor = new QAction(QIcon(":/icons/images/monitor.png"),"Monitor",this);
+    acnFlipView = new QAction(QIcon(":/icons/images/flip.png"),"Flip",this);
+    acnAddCustomText = new QAction(QIcon(":/icons/images/assign-text.png"),"Assign Name",this);
+    acnMaxPlantProd = new QAction(QIcon(":/icons/images/plant.png"),"Maximize Plant Production",this);
+    acnViewResult = new QAction(QIcon(":/icons/images/result.png"),"View Results",this);
+    acnAdjFeedStream = new QAction(QIcon(":/icons/images/adjust.png"),"Adjust Feed Stream",this);
+    acnfrontEndLoader = new QAction(tr(">>> Front End Loader <<<"),this);
+    acnPasteVal = new QAction(tr("Paste"),this);
 
     connect(acnSave, &QAction::triggered, this, &CustomGraphicsView::onActionSave);
     connect(acnDel, &QAction::triggered, this, &CustomGraphicsView::onActionDelete);
     connect(acnSetVal, &QAction::triggered, this, &CustomGraphicsView::onSetValue);
+    connect(acnCutVal, &QAction::triggered, this, &CustomGraphicsView::onSetValue);
+    connect(acnCopyVal, &QAction::triggered, this, &CustomGraphicsView::onCopyVal);
+    connect(acnDelItem, &QAction::triggered, this, &CustomGraphicsView::onActionDelete);
+    connect(acnMonitor, &QAction::triggered, this, &CustomGraphicsView::onSetValue);
+    connect(acnFlipView, &QAction::triggered, this, &CustomGraphicsView::onSetValue);
+    connect(acnAddCustomText, &QAction::triggered, this, &CustomGraphicsView::onAddCustomText);
+    connect(acnMaxPlantProd, &QAction::triggered, this, &CustomGraphicsView::onSetValue);
+    connect(acnViewResult, &QAction::triggered, this, &CustomGraphicsView::onSetValue);
+    connect(acnPasteVal, &QAction::triggered, this, &CustomGraphicsView::onPasteVal);
 
     connect(this, &CustomGraphicsView::UndoTriggered, UndoStack, &QUndoStack::undo);
     connect(this, &CustomGraphicsView::RedoTriggered, UndoStack, &QUndoStack::redo);
@@ -171,13 +194,33 @@ void CustomGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 void CustomGraphicsView::mouseDoubleClickEvent(QMouseEvent *event)
 {
     contextMenu.clear();
+
     QList<QGraphicsItem *> lst = items(event->pos());
-    for(QGraphicsItem* item:lst)
+    for(QGraphicsItem* item : lst)
     {
         CustomPixmapItem *widget = dynamic_cast<CustomPixmapItem *>(item);
         if(widget)
         {
+            contextMenu.addAction(acnfrontEndLoader);
+            contextMenu.addSeparator();
+
+            contextMenu.addAction(acnAdjFeedStream);
+            contextMenu.addAction(acnViewResult);
+            contextMenu.addSeparator();
+
+            contextMenu.addAction(acnMaxPlantProd);
+            contextMenu.addSeparator();
+
+            contextMenu.addAction(acnMonitor);
+            contextMenu.addAction(acnFlipView);
+            contextMenu.addAction(acnAddCustomText);
             contextMenu.addAction(acnSetVal);
+            contextMenu.addSeparator();
+
+            contextMenu.addAction(acnCutVal);
+            contextMenu.addAction(acnCopyVal);
+            contextMenu.addAction(acnPasteVal);
+            contextMenu.addAction(acnDelItem);
             selectedItem = widget;
         }
     }
@@ -225,6 +268,28 @@ void CustomGraphicsView::contextMenuEvent(QContextMenuEvent *event)
     contextMenu.exec(event->globalPos());
 }
 
+void CustomGraphicsView::wheelEvent(QWheelEvent *event)
+{
+    setTransformationAnchor(AnchorUnderMouse);
+    double scalefactor = 1.5;
+
+    if(event->modifiers() & Qt::ControlModifier)
+    {
+        if(event->delta() > 0)
+        {
+           scale(scalefactor,scalefactor);
+        }
+        else
+        {
+            scale(1/scalefactor,1/scalefactor);
+        }
+    }
+    else
+    {
+        QGraphicsView::wheelEvent(event);
+    }
+}
+
 void CustomGraphicsView::onActionSave()
 {
     // Action 1 triggered
@@ -268,6 +333,91 @@ void CustomGraphicsView::onSetValue()
     }
 }
 
+void CustomGraphicsView::onAddCustomText()
+{
+    CustomPixmapItem* item = dynamic_cast<CustomPixmapItem *>(selectedItem);
+    if(item){
+        bool ok;
+        QString value = QInputDialog::getText(this, "Enter Text", "Name:", QLineEdit::Normal, QString(), &ok);
+        if (ok && !value.isEmpty()){
+            item->SetText(value);
+        }
+    }
+}
+void CustomGraphicsView::onCopyVal()
+{
+    if (selectedItem) {
+        CustomPixmapItem* itemToCopy = dynamic_cast<CustomPixmapItem*>(selectedItem);
+        if (itemToCopy) {
+            CustomPixmapItem* copied = itemToCopy->clone();
+            //CustomPixmapItem* copied = new CustomPixmapItem(itemToCopy);
+            if(copied){
+
+                copied->setPos(mapToScene(selectedItem->scenePos().x(),selectedItem->scenePos().y() ));
+                scene->addItem(copied);
+                emit PublishNewData(QString("(%1, %2)").arg(copied->pos().x()).arg(copied->pos().y()));
+                AddItemToMoveStack(copied);
+            }
+        }
+    }
+}
+
+void CustomGraphicsView::onPasteVal()
+{
+    if (copiedItem)
+    {
+        AddItemToMoveStack(copiedItem);
+        scene->addItem(copiedItem);
+        copiedItem = nullptr;
+    }
+}
+
+void CustomGraphicsView::onResult()
+{
+    double result = 0.0;
+    QSet<CustomPixmapItem*> visitItems;
+
+    for (auto it = lineConnections.begin(); it != lineConnections.end(); ++it)
+    {
+        QGraphicsEllipseItem *startEllipse = it.value().first;
+        QGraphicsEllipseItem *endEllipse = it.value().second;
+
+        if (startEllipse && endEllipse)
+        {
+            CustomPixmapItem *startItem = dynamic_cast<CustomPixmapItem *>(startEllipse->parentItem());
+            CustomPixmapItem *endItem = dynamic_cast<CustomPixmapItem *>(endEllipse->parentItem());
+
+            int endId = endItem->GetItemId();
+            int n;
+
+            if(endId > 4){
+                n = endId % 4;
+            }else{
+                n = endId;
+            }
+
+            switch(n){
+            case 1 :
+                result += startItem->GetText().toDouble() +  endItem->GetText().toDouble();
+                visitItems.insert(startItem);
+                break;
+            case 2 :
+                result += startItem->GetText().toDouble() * endItem->GetText().toDouble();
+                visitItems.insert(endItem);
+                break;
+            case 3 :
+                result += startItem->GetText().toDouble() / endItem->GetText().toDouble();
+                visitItems.insert(endItem);
+                break;
+            default:
+                result += startItem->GetText().toDouble() - endItem->GetText().toDouble();
+                break;
+            }
+        }
+    }
+    emit resultUpdated(QString::number(result));
+}
+
 void CustomGraphicsView::saveToFile(const QString &fileName)
 {
     QFile file(fileName);
@@ -275,9 +425,7 @@ void CustomGraphicsView::saveToFile(const QString &fileName)
         qWarning("Could not open file for writing");
         return;
     }
-
     QDataStream out(&file);
-
     // Save all CustomPixmapItems
     QList<QGraphicsItem *> items = scene->items();
     for (QGraphicsItem *item : items) {
@@ -289,7 +437,6 @@ void CustomGraphicsView::saveToFile(const QString &fileName)
             lineItem->write(out);
         }
     }
-
     QMessageBox msgBox;
     msgBox.setText("Data Saved Succesfully!!!");
     msgBox.exec();
@@ -302,9 +449,7 @@ void CustomGraphicsView::loadFromFile(const QString &fileName)
         qWarning("Could not open file for reading");
         return;
     }
-
     QDataStream in(&file);
-
     scene->clear();
     lineConnections.clear();
 
@@ -328,6 +473,139 @@ void CustomGraphicsView::loadFromFile(const QString &fileName)
             lineItems.append(lineItem);
         }
     }
+    reconnectLines(lineItems, customItems);
+}
+
+void CustomGraphicsView::saveToXml(const QString &fileName)
+{
+    QDomDocument doc;
+    QDomElement root = doc.createElement("Scene");
+    doc.appendChild(root);
+
+    QList<QGraphicsItem *> items = scene->items();
+
+    for (QGraphicsItem *item : items)
+    {
+        QDomElement element;
+
+        if (auto pixmapItem = dynamic_cast<CustomPixmapItem *>(item))
+        {
+            element = doc.createElement("CustomPixmapItem");
+            element.setAttribute("id", pixmapItem->GetItemId());
+            element.setAttribute("x", pixmapItem->pos().x());
+            element.setAttribute("y", pixmapItem->pos().y());
+
+            // Save pixmap width and height
+//            QPixmap pixmap = pixmapItem->PixmapLabel->pixmap()->scaled(pixmapItem->pixmapWidth(), pixmapItem->pixmapHeight());
+//            element.setAttribute("width", pixmap.width());
+//            element.setAttribute("height", pixmap.height());
+            // Save text
+//            element.setAttribute("text", pixmapItem->TextLabel->text());
+
+            // Save pixmap data
+            QByteArray byteArray;
+            QBuffer buffer(&byteArray);
+            buffer.open(QIODevice::WriteOnly);
+//            pixmap.save(&buffer, "PNG"); // Save pixmap to PNG format
+            buffer.close();
+            element.setAttribute("pixmapData", QString(byteArray.toBase64()));
+            root.appendChild(element);
+        }
+        else if (auto lineItem = dynamic_cast<ArrowLineItem *>(item))
+        {
+            element = doc.createElement("ArrowLineItem");
+            element.setAttribute("startX", lineItem->line().x1());
+            element.setAttribute("startY", lineItem->line().y1());
+            element.setAttribute("endX", lineItem->line().x2());
+            element.setAttribute("endY", lineItem->line().y2());
+            root.appendChild(element);
+        }
+    }
+
+    QFile file(fileName);
+    if (!file.open(QIODevice::WriteOnly))
+    {
+        qWarning() << "Could not open file for writing";
+        return;
+    }
+
+    QTextStream stream(&file);
+    stream << doc.toString();
+    file.close();
+
+    QMessageBox msgBox;
+    msgBox.setText("Data in Xml Saved Successfully!");
+    msgBox.exec();
+}
+
+void CustomGraphicsView::loadFromXml(const QString &fileName)
+{
+    QDomDocument doc;
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly))
+    {
+        qWarning() << "Could not open file for reading";
+        return;
+    }
+
+    if (!doc.setContent(&file))
+    {
+        file.close();
+        qWarning() << "Failed to parse XML";
+        return;
+    }
+
+    QDomElement root = doc.documentElement();
+    QDomNodeList pixmapNodes = root.elementsByTagName("CustomPixmapItem");
+    QDomNodeList lineNodes = root.elementsByTagName("ArrowLineItem");
+
+    // Clear existing scene and connections
+    scene->clear();
+    lineConnections.clear();
+    QMap<int, CustomPixmapItem*> customItems;
+    QList<ArrowLineItem*> lineItems;
+
+    // Load pixmap items
+    for (int i = 0; i < pixmapNodes.count(); i++)
+    {
+        QDomElement element = pixmapNodes.at(i).toElement();
+        CustomPixmapItem *pixmapItem = new CustomPixmapItem(QPixmap());
+
+        // Set position
+        pixmapItem->setPos(element.attribute("x").toDouble(), element.attribute("y").toDouble());
+
+        // Load pixmap data
+        QByteArray byteArray = QByteArray::fromBase64(element.attribute("pixmapData").toUtf8());
+        QPixmap pixmap;
+        if (!pixmap.loadFromData(byteArray, "PNG"))
+        {
+            qWarning() << "Failed to load pixmap from data for item with ID:" << element.attribute("id");
+            delete pixmapItem; // Clean up the item
+            continue;
+        }
+//        pixmapItem->PixmapLabel = new QLabel();
+//        pixmapItem->PixmapLabel->setPixmap(pixmap);
+
+        // Set text and item ID
+        pixmapItem->SetText(element.attribute("text"));
+        pixmapItem->SetItemId(element.attribute("id").toInt());
+
+        scene->addItem(pixmapItem);
+        customItems.insert(pixmapItem->GetItemId(), pixmapItem);
+        connect(pixmapItem, &CustomPixmapItem::positionChanged, this, &CustomGraphicsView::updateLinePosition);
+    }
+    // Load line items
+    for (int i = 0; i < lineNodes.count(); i++)
+    {
+        QDomElement element = lineNodes.at(i).toElement();
+        ArrowLineItem *lineItem = new ArrowLineItem(QLineF(
+                                                        QPointF(element.attribute("startX").toDouble(), element.attribute("startY").toDouble()),
+                                                        QPointF(element.attribute("endX").toDouble(), element.attribute("endY").toDouble())
+                                                        ));
+        scene->addItem(lineItem);
+        lineItems.append(lineItem);
+    }
+    // Reconnect lines after all items are loaded
     reconnectLines(lineItems, customItems);
 }
 
