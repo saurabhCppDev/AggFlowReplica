@@ -6,7 +6,6 @@
 #include <QGraphicsProxyWidget>
 #include <QVBoxLayout>
 
-
 namespace
 {
     const char* DEFAULT_TEXT = "Text";
@@ -37,7 +36,7 @@ CustomPixmapItem::CustomPixmapItem(const QPixmap &pixmap)
 
 void CustomPixmapItem::AddEndCircles()
 {
-////  this way also we can add widget also depending on future requirement might need it so keeping commented code
+//  this way also we can add widget also depending on future requirement might need it so keeping commented code
 //    QGraphicsPixmapItem *pixmapItem = new QGraphicsPixmapItem(pixmap);
 //    pixmapItem->setPos(0, 0); // Position the image in the scene
 
@@ -72,8 +71,6 @@ void CustomPixmapItem::AddEndCircles()
 //    the circles opacity and colour i will adjust later if needed
     //    EndCircle->setOpacity(0.5);
 }
-
-
 
 QGraphicsEllipseItem *CustomPixmapItem::GetEndCircle() const
 {
@@ -114,10 +111,6 @@ void CustomPixmapItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
         setPos(newPos);
         emit positionChanged();
     }
-
-
-
-
     update();
     QGraphicsItemGroup::mouseMoveEvent(event);
 }
@@ -170,7 +163,6 @@ void CustomPixmapItem::read(QDataStream &in) {
     ItemId = itemId;
     SetStartConnected(isStartConn);
     SetEndConnected(isEndConn);
-
 }
 
 void CustomPixmapItem::SetStartConnected(bool connected)

@@ -76,7 +76,6 @@ private:
     QGraphicsItem *selectedItem = nullptr;
     QPointF itemStartPosition;
     QUndoStack* UndoStack;
-
 };
 
 #endif // CUSTOMGRAPHICSVIEW_H

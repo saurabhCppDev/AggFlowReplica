@@ -6,7 +6,6 @@
 #include <QObject>
 #include <QLabel>
 
-
 class CustomPixmapItem : public QObject, public QGraphicsItemGroup
 {
     Q_OBJECT
@@ -31,10 +30,6 @@ public:
     QGraphicsEllipseItem *GetStartCircle() const;
     QGraphicsEllipseItem *GetEndCircle() const;
 
-    QLabel* TextLabel;
-    QLabel* PixmapLabel;
-
-
 signals:
     void positionChanged();
 
@@ -50,13 +45,14 @@ private:
     QPointF DragStartPosition;
     bool IsDraggingInProgress;
     QWidget* ContainerWidget;
+    QLabel* TextLabel;
+    QLabel* PixmapLabel;
     QGraphicsProxyWidget* ProxyWid;
     QGraphicsEllipseItem *StartCircle;
     QGraphicsEllipseItem *EndCircle;
     int ItemId;
     bool IsStartConnected;
     bool IsEndConnected;
-
 };
 
 #endif // CUSTOMPIXMAPITEM_H

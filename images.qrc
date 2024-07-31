@@ -18,5 +18,6 @@
         <file>images/undo.png</file>
         <file>images/zoom_in.png</file>
         <file>images/zoom_out.png</file>
+        <file>images/zoom_to_fit.PNG</file>
     </qresource>
 </RCC>

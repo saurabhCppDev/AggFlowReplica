@@ -13,7 +13,6 @@
 #include <QDomDocument>
 #include <QBuffer>
 
-
 CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     : QGraphicsView(parent)
     , scene(new QGraphicsScene(this))
@@ -23,7 +22,6 @@ CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     setScene(scene);
     setAcceptDrops(true);
     setRenderHints(QPainter::HighQualityAntialiasing);
-
     scene->setSceneRect(0, 0,600,400);
 
     acnSave = new QAction(tr("Save Not Yet Implemented"), this);
@@ -33,10 +31,8 @@ CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     connect(acnSave, &QAction::triggered, this, &CustomGraphicsView::onActionSave);
     connect(acnDel, &QAction::triggered, this, &CustomGraphicsView::onActionDelete);
     connect(acnSetVal, &QAction::triggered, this, &CustomGraphicsView::onSetValue);
-
     connect(this, &CustomGraphicsView::UndoTriggered, UndoStack, &QUndoStack::undo);
     connect(this, &CustomGraphicsView::RedoTriggered, UndoStack, &QUndoStack::redo);
-
 }
 
 void CustomGraphicsView::dragEnterEvent(QDragEnterEvent *event)
@@ -78,7 +74,6 @@ void CustomGraphicsView::dropEvent(QDropEvent *event)
 
         event->acceptProposedAction();
     }
-
 }
 
 void CustomGraphicsView::mousePressEvent(QMouseEvent *event)
@@ -154,7 +149,6 @@ void CustomGraphicsView::mouseReleaseEvent(QMouseEvent *event)
             AddItemToAddStack(currentLine);
         }
 
-
         currentLine = nullptr;
     }
     else
@@ -168,7 +162,6 @@ void CustomGraphicsView::mouseReleaseEvent(QMouseEvent *event)
             {
                 emit PublishNewData(QString("(%1, %2)").arg(cpItm->pos().x()).arg(cpItm->pos().y()));
                 AddItemToMoveStack(cpItm);
-
                 break;
             }
         }
@@ -297,13 +290,11 @@ void CustomGraphicsView::onSetValue()
         double value = QInputDialog::getDouble(this, "Enter Value:", "Operation:", 0, 0, 1000, 2, nullptr);
         item->SetText(QString::number(value));
     }
-
 }
 
 void CustomGraphicsView::onResult()
 {
     double result = 0.0;
-
     QSet<CustomPixmapItem*> visitItems;
 
     for (auto it = lineConnections.begin(); it != lineConnections.end(); ++it)
@@ -318,16 +309,14 @@ void CustomGraphicsView::onResult()
 
             int endId = endItem->GetItemId();
             int n;
-            if(endId > 4)
-            {
+
+            if(endId > 4){
                 n = endId % 4;
-            }
-            else
-            {
+            }else{
                 n = endId;
             }
-            switch(n)
-            {
+
+            switch(n){
             case 1 :
                 result += startItem->GetText().toDouble() +  endItem->GetText().toDouble();
                 visitItems.insert(startItem);
@@ -343,7 +332,6 @@ void CustomGraphicsView::onResult()
             default:
                 result += startItem->GetText().toDouble() - endItem->GetText().toDouble();
                 break;
-
             }
         }
     }
@@ -357,9 +345,7 @@ void CustomGraphicsView::saveToFile(const QString &fileName)
         qWarning("Could not open file for writing");
         return;
     }
-
     QDataStream out(&file);
-
     // Save all CustomPixmapItems
     QList<QGraphicsItem *> items = scene->items();
     for (QGraphicsItem *item : items) {
@@ -371,12 +357,9 @@ void CustomGraphicsView::saveToFile(const QString &fileName)
             lineItem->write(out);
         }
     }
-
     QMessageBox msgBox;
     msgBox.setText("Data Saved Succesfully!!!");
     msgBox.exec();
-
-
 }
 
 void CustomGraphicsView::loadFromFile(const QString &fileName)
@@ -386,9 +369,7 @@ void CustomGraphicsView::loadFromFile(const QString &fileName)
         qWarning("Could not open file for reading");
         return;
     }
-
     QDataStream in(&file);
-
     scene->clear();
     lineConnections.clear();
 
@@ -411,9 +392,7 @@ void CustomGraphicsView::loadFromFile(const QString &fileName)
             scene->addItem(lineItem);
             lineItems.append(lineItem);
         }
-
     }
-
     reconnectLines(lineItems, customItems);
 }
 
@@ -437,21 +416,19 @@ void CustomGraphicsView::saveToXml(const QString &fileName)
             element.setAttribute("y", pixmapItem->pos().y());
 
             // Save pixmap width and height
-            QPixmap pixmap = pixmapItem->PixmapLabel->pixmap()->scaled(pixmapItem->pixmapWidth(), pixmapItem->pixmapHeight());
-            element.setAttribute("width", pixmap.width());
-            element.setAttribute("height", pixmap.height());
-
+//            QPixmap pixmap = pixmapItem->PixmapLabel->pixmap()->scaled(pixmapItem->pixmapWidth(), pixmapItem->pixmapHeight());
+//            element.setAttribute("width", pixmap.width());
+//            element.setAttribute("height", pixmap.height());
             // Save text
-            element.setAttribute("text", pixmapItem->TextLabel->text());
+//            element.setAttribute("text", pixmapItem->TextLabel->text());
 
             // Save pixmap data
             QByteArray byteArray;
             QBuffer buffer(&byteArray);
             buffer.open(QIODevice::WriteOnly);
-            pixmap.save(&buffer, "PNG"); // Save pixmap to PNG format
+//            pixmap.save(&buffer, "PNG"); // Save pixmap to PNG format
             buffer.close();
             element.setAttribute("pixmapData", QString(byteArray.toBase64()));
-
             root.appendChild(element);
         }
         else if (auto lineItem = dynamic_cast<ArrowLineItem *>(item))
@@ -505,7 +482,6 @@ void CustomGraphicsView::loadFromXml(const QString &fileName)
     // Clear existing scene and connections
     scene->clear();
     lineConnections.clear();
-
     QMap<int, CustomPixmapItem*> customItems;
     QList<ArrowLineItem*> lineItems;
 
@@ -527,8 +503,8 @@ void CustomGraphicsView::loadFromXml(const QString &fileName)
             delete pixmapItem; // Clean up the item
             continue;
         }
-        pixmapItem->PixmapLabel = new QLabel();
-        pixmapItem->PixmapLabel->setPixmap(pixmap);
+//        pixmapItem->PixmapLabel = new QLabel();
+//        pixmapItem->PixmapLabel->setPixmap(pixmap);
 
         // Set text and item ID
         pixmapItem->SetText(element.attribute("text"));
@@ -538,7 +514,6 @@ void CustomGraphicsView::loadFromXml(const QString &fileName)
         customItems.insert(pixmapItem->GetItemId(), pixmapItem);
         connect(pixmapItem, &CustomPixmapItem::positionChanged, this, &CustomGraphicsView::updateLinePosition);
     }
-
     // Load line items
     for (int i = 0; i < lineNodes.count(); i++)
     {
@@ -547,16 +522,12 @@ void CustomGraphicsView::loadFromXml(const QString &fileName)
                                                         QPointF(element.attribute("startX").toDouble(), element.attribute("startY").toDouble()),
                                                         QPointF(element.attribute("endX").toDouble(), element.attribute("endY").toDouble())
                                                         ));
-
         scene->addItem(lineItem);
         lineItems.append(lineItem);
     }
-
     // Reconnect lines after all items are loaded
     reconnectLines(lineItems, customItems);
 }
-
-
 
 void CustomGraphicsView::reconnectLines(QList<ArrowLineItem*> lineItems, QMap<int, CustomPixmapItem*> customItems)
 {

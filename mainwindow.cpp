@@ -11,22 +11,19 @@
 #include <QStatusBar>
 #include <QToolBar>
 
-
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , centralWidget(new QWidget(this))
     , listView(new QListView(this))
     , delegate(new CustomDelegate(64, this))
     , graphicsView(new CustomGraphicsView(this))
-    , clrBtn(new QPushButton("Clear", this))
     , oldData(new QLabel)
     , newData(new QLabel)
     , UndoData(new QLabel)
     , RedoData(new QLabel)
     , status(new QLabel(this))
-    ,currentFile("saveTest.scene")
-    ,zoomFactor(1.5)
-
+    , currentFile("saveTest.scene")
+    , zoomFactor(1.5)
 {
     SetupUI();
     createActions();
@@ -34,25 +31,20 @@ MainWindow::MainWindow(QWidget *parent)
     createToolbar();
 
     connect(delegate, &CustomDelegate::sizeHintChanged, listView, &QListView::doItemsLayout);
-    connect(clrBtn, &QPushButton::clicked, this, &MainWindow::OnClearClicked);
-
     connect(graphicsView, &CustomGraphicsView::PublishOldData, this, &MainWindow::onOldPos);
     connect(graphicsView, &CustomGraphicsView::PublishNewData, this, &MainWindow::onNewPos);
-
     connect(graphicsView, &CustomGraphicsView::PublishUndoData, this, &MainWindow::onUndoPos);
     connect(graphicsView, &CustomGraphicsView::PublishRedoData, this, &MainWindow::onRedoPos);
     connect(graphicsView, &CustomGraphicsView::resultUpdated, this, &MainWindow::updateResult);
 
     runAction = new QAction("Run", this);
     menuBar()->addAction(runAction);
-
     connect(runAction, &QAction::triggered, graphicsView, &CustomGraphicsView::onResult);
     status->setText("Result : 0");
     statusBar()->addPermanentWidget(status);
-
 }
 
-void MainWindow::OnClearClicked()
+void MainWindow::onClear()
 {
     graphicsView->ClearScene();
     CustomPixmapItem::GlobalItemId = 0;
@@ -86,7 +78,6 @@ void MainWindow::SetupUI()
     QVBoxLayout *vlayout = new QVBoxLayout();
     QHBoxLayout *hlayout = new QHBoxLayout(centralWidget);
     vlayout->addWidget(listView);
-    vlayout->addWidget(clrBtn);
     //    vlayout->addWidget(oldData);
     //    vlayout->addWidget(newData);
     //    vlayout->addWidget(new QLabel("After Undo/Redo"));
@@ -106,26 +97,23 @@ void MainWindow::createMenus()
     fileMenu->addAction(saveAsAction);
     fileMenu->addSeparator();
     fileMenu->addAction(loadAction);
+    fileMenu->addAction(clearAction);
     fileMenu->addSeparator();
     fileMenu->addAction(exitAction);
 
     editMenu = menuBar()->addMenu(tr("&Edit"));
-
     editMenu->addAction(undoAction);
     editMenu->addAction(redoAction);
     editMenu->addSeparator();
 
     viewMenu = menuBar()->addMenu(tr("&View"));
-
     viewMenu->addAction(zoomInAction);
     viewMenu->addAction(zoomOutAction);
     viewMenu->addSeparator();
-
 }
 
 void MainWindow::createActions()
 {
-
     saveAction = new QAction(tr("&Save"), this);
     saveAction->setShortcuts(QKeySequence::Save);
     saveAction->setStatusTip(tr("Ctrl+S"));
@@ -143,6 +131,10 @@ void MainWindow::createActions()
     loadAction->setStatusTip(tr("Ctrl+O"));
     loadAction->setIcon(QIcon(":/icons/images/loading.png"));
     connect(loadAction, &QAction::triggered, this, &MainWindow::onLoad);
+
+    clearAction = new QAction(tr("&Clear"), this);
+    clearAction->setStatusTip(tr("Clear"));
+    connect(clearAction, &QAction::triggered, this, &MainWindow::onClear);
 
     exitAction = new QAction(tr("&Exit"), this);
     exitAction->setShortcuts(QKeySequence::Quit);
@@ -170,6 +162,11 @@ void MainWindow::createActions()
     zoomOutAction->setStatusTip(tr("Zoom Out"));
     zoomOutAction->setIcon(QIcon(":/icons/images/zoom_out.png"));
     connect(zoomOutAction, &QAction::triggered, this, &MainWindow::zoomOut);
+
+    zoomToFitAction = new QAction(tr("&Zoom to Fit"), this);
+    zoomToFitAction->setStatusTip(tr("Zoom to Fit"));
+    zoomToFitAction->setIcon(QIcon(":/icons/images/zoom_to_fit.PNG"));
+    connect(zoomToFitAction, &QAction::triggered, this, &MainWindow::zoomToFit);
 }
 
 void MainWindow::createToolbar()
@@ -183,11 +180,11 @@ void MainWindow::createToolbar()
     editToolBar->addSeparator();
     editToolBar->addAction(zoomInAction);
     editToolBar->addAction(zoomOutAction);
+    editToolBar->addAction(zoomToFitAction);
     editToolBar->addSeparator();
     removeToolBar(editToolBar);
     addToolBar(editToolBar);
     editToolBar->show();
-
 }
 
 void MainWindow::setCurrentFile(const QString &fileName)
@@ -210,16 +207,13 @@ void MainWindow::onSave()
     }
 }
 
-
 void MainWindow::onSaveAs()
 {
-
     QString fileName = QFileDialog::getSaveFileName(this, tr("Save As File"), "", tr("XML Files (*.xml);;Scene Files(*.scene)"));
     if (fileName.isEmpty())
         return;
     setCurrentFile(fileName);
     onSave();
-
 }
 
 void MainWindow::onLoad()
@@ -272,3 +266,8 @@ void MainWindow::zoomOut()
     graphicsView->scale(1.0 / 1.5, 1.0 / 1.5);
 }
 
+void MainWindow::zoomToFit()
+{
+    graphicsView->fitInView(graphicsView->sceneRect(), Qt::KeepAspectRatio);
+    zoomFactor = 1.5;
+}
