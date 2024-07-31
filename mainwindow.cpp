@@ -6,6 +6,10 @@
 #include <QDrag>
 #include <QMenuBar>
 #include <QLabel>
+#include <QXmlStreamWriter>
+#include <QMessageBox>
+#include <QStatusBar>
+#include <QToolBar>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -13,45 +17,39 @@ MainWindow::MainWindow(QWidget *parent)
     , listView(new QListView(this))
     , delegate(new CustomDelegate(64, this))
     , graphicsView(new CustomGraphicsView(this))
-    , clrBtn(new QPushButton("Clear", this))
     , oldData(new QLabel)
     , newData(new QLabel)
     , UndoData(new QLabel)
     , RedoData(new QLabel)
+    , status(new QLabel(this))
+    , currentFile("saveTest.scene")
+    , zoomFactor(1.5)
 {
     SetupUI();
+    createActions();
+    createMenus();
+    createToolbar();
 
     connect(delegate, &CustomDelegate::sizeHintChanged, listView, &QListView::doItemsLayout);
-    connect(clrBtn, &QPushButton::clicked, this, &MainWindow::OnClearClicked);
-
     connect(graphicsView, &CustomGraphicsView::PublishOldData, this, &MainWindow::onOldPos);
     connect(graphicsView, &CustomGraphicsView::PublishNewData, this, &MainWindow::onNewPos);
-
     connect(graphicsView, &CustomGraphicsView::PublishUndoData, this, &MainWindow::onUndoPos);
     connect(graphicsView, &CustomGraphicsView::PublishRedoData, this, &MainWindow::onRedoPos);
+    connect(graphicsView, &CustomGraphicsView::resultUpdated, this, &MainWindow::updateResult);
 
-    QAction *saveAction = new QAction("Save", this);
-    QAction *loadAction = new QAction("Load", this);
-
-    connect(saveAction, &QAction::triggered, this, &MainWindow::onSave);
-    connect(loadAction, &QAction::triggered, this, &MainWindow::onLoad);
-
-    menuBar()->addAction(saveAction);
-    menuBar()->addAction(loadAction);
-
-    QAction *undoAction = new QAction("Undo", this);
-    QAction *redoAction = new QAction("Redo", this);
-
-    connect(undoAction, &QAction::triggered, graphicsView, &CustomGraphicsView::UndoTriggered);
-    connect(redoAction, &QAction::triggered, graphicsView, &CustomGraphicsView::RedoTriggered);
-
-    menuBar()->addAction(undoAction);
-    menuBar()->addAction(redoAction);
+    runAction = new QAction("Run", this);
+    menuBar()->addAction(runAction);
+    connect(runAction, &QAction::triggered, graphicsView, &CustomGraphicsView::onResult);
+    status->setText("Result : 0");
+    statusBar()->addPermanentWidget(status);
 }
 
-void MainWindow::OnClearClicked()
+void MainWindow::onClear()
 {
     graphicsView->ClearScene();
+    CustomPixmapItem::GlobalItemId = 0;
+    status->setText("Result : 0");
+    statusBar()->showMessage(tr("Scene cleared"), 2000);
 }
 
 void MainWindow::SetupUI()
@@ -80,16 +78,120 @@ void MainWindow::SetupUI()
     QVBoxLayout *vlayout = new QVBoxLayout();
     QHBoxLayout *hlayout = new QHBoxLayout(centralWidget);
     vlayout->addWidget(listView);
-    vlayout->addWidget(clrBtn);
-//    vlayout->addWidget(oldData);
-//    vlayout->addWidget(newData);
-//    vlayout->addWidget(new QLabel("After Undo/Redo"));
-//    vlayout->addWidget(UndoData);
-//    vlayout->addWidget(RedoData);
+    //    vlayout->addWidget(oldData);
+    //    vlayout->addWidget(newData);
+    //    vlayout->addWidget(new QLabel("After Undo/Redo"));
+    //    vlayout->addWidget(UndoData);
+    //    vlayout->addWidget(RedoData);
     hlayout->addLayout(vlayout);
     hlayout->addWidget(graphicsView);
 
     setMinimumSize(800, 600);
+    statusBar();
+}
+
+void MainWindow::createMenus()
+{
+    fileMenu = menuBar()->addMenu(tr("&File"));
+    fileMenu->addAction(saveAction);
+    fileMenu->addAction(saveAsAction);
+    fileMenu->addSeparator();
+    fileMenu->addAction(loadAction);
+    fileMenu->addAction(clearAction);
+    fileMenu->addSeparator();
+    fileMenu->addAction(exitAction);
+
+    editMenu = menuBar()->addMenu(tr("&Edit"));
+    editMenu->addAction(undoAction);
+    editMenu->addAction(redoAction);
+    editMenu->addSeparator();
+
+    viewMenu = menuBar()->addMenu(tr("&View"));
+    viewMenu->addAction(zoomInAction);
+    viewMenu->addAction(zoomOutAction);
+    viewMenu->addSeparator();
+}
+
+void MainWindow::createActions()
+{
+    saveAction = new QAction(tr("&Save"), this);
+    saveAction->setShortcuts(QKeySequence::Save);
+    saveAction->setStatusTip(tr("Ctrl+S"));
+    saveAction->setIcon(QIcon(":/icons/images/save.png"));
+    connect(saveAction, &QAction::triggered, this, &MainWindow::onSave);
+
+    saveAsAction = new QAction(tr("&Save As"), this);
+    saveAsAction->setShortcuts(QKeySequence::SaveAs);
+    saveAsAction->setShortcut(tr("Ctrl+Shift+S"));
+    saveAsAction->setIcon(QIcon(":/icons/images/save_as.png"));
+    connect(saveAsAction, &QAction::triggered, this, &MainWindow::onSaveAs);
+
+    loadAction = new QAction(tr("&Load"), this);
+    loadAction->setShortcuts(QKeySequence::Open);
+    loadAction->setStatusTip(tr("Ctrl+O"));
+    loadAction->setIcon(QIcon(":/icons/images/loading.png"));
+    connect(loadAction, &QAction::triggered, this, &MainWindow::onLoad);
+
+    clearAction = new QAction(tr("&Clear"), this);
+    clearAction->setStatusTip(tr("Clear"));
+    connect(clearAction, &QAction::triggered, this, &MainWindow::onClear);
+
+    exitAction = new QAction(tr("&Exit"), this);
+    exitAction->setShortcuts(QKeySequence::Quit);
+    exitAction->setStatusTip(tr("Quit"));
+    connect(exitAction, &QAction::triggered, this, &MainWindow::close);
+
+    undoAction = new QAction(tr("&Undo"), this);
+    undoAction->setShortcut(tr("Ctrl+Z"));
+    undoAction->setStatusTip(tr("Undo last operation"));
+    undoAction->setIcon(QIcon(":/icons/images/undo.png"));
+    connect(undoAction, &QAction::triggered, graphicsView, &CustomGraphicsView::UndoTriggered);
+
+    redoAction = new QAction(tr("&Redo"), this);
+    redoAction->setShortcut(tr("Ctrl+Shift+Z"));
+    redoAction->setStatusTip(tr("Redo last operation"));
+    redoAction->setIcon(QIcon(":/icons/images/redo.png"));
+    connect(redoAction, &QAction::triggered, graphicsView, &CustomGraphicsView::RedoTriggered);
+
+    zoomInAction = new QAction(tr("&Zoom In"), this);
+    zoomInAction->setStatusTip(tr("Zoom In"));
+    zoomInAction->setIcon(QIcon(":/icons/images/zoom_in.png"));
+    connect(zoomInAction, &QAction::triggered, this, &MainWindow::zoomIn);
+
+    zoomOutAction = new QAction(tr("&Zoom Out"), this);
+    zoomOutAction->setStatusTip(tr("Zoom Out"));
+    zoomOutAction->setIcon(QIcon(":/icons/images/zoom_out.png"));
+    connect(zoomOutAction, &QAction::triggered, this, &MainWindow::zoomOut);
+
+    zoomToFitAction = new QAction(tr("&Zoom to Fit"), this);
+    zoomToFitAction->setStatusTip(tr("Zoom to Fit"));
+    zoomToFitAction->setIcon(QIcon(":/icons/images/zoom_to_fit.PNG"));
+    connect(zoomToFitAction, &QAction::triggered, this, &MainWindow::zoomToFit);
+}
+
+void MainWindow::createToolbar()
+{
+    QToolBar *editToolBar;
+    editToolBar = addToolBar(tr("Edit"));
+    editToolBar->addAction(saveAction);
+    editToolBar->addSeparator();
+    editToolBar->addAction(undoAction);
+    editToolBar->addAction(redoAction);
+    editToolBar->addSeparator();
+    editToolBar->addAction(zoomInAction);
+    editToolBar->addAction(zoomOutAction);
+    editToolBar->addAction(zoomToFitAction);
+    editToolBar->addSeparator();
+    removeToolBar(editToolBar);
+    addToolBar(editToolBar);
+    editToolBar->show();
+}
+
+void MainWindow::setCurrentFile(const QString &fileName)
+{
+    currentFile = fileName;
+    setWindowModified(false);
+    setWindowFilePath(currentFile.isEmpty() ? tr("untitled.xml") : currentFile);
 }
 
 void MainWindow::onSave()
@@ -98,6 +200,20 @@ void MainWindow::onSave()
     if (!fileName.isEmpty()) {
         graphicsView->saveToFile(fileName);
     }
+
+    QString file = "saveTest.xml";
+    if (!file.isEmpty()) {
+        graphicsView->saveToXml(file);
+    }
+}
+
+void MainWindow::onSaveAs()
+{
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save As File"), "", tr("XML Files (*.xml);;Scene Files(*.scene)"));
+    if (fileName.isEmpty())
+        return;
+    setCurrentFile(fileName);
+    onSave();
 }
 
 void MainWindow::onLoad()
@@ -107,6 +223,10 @@ void MainWindow::onLoad()
     if (!fileName.isEmpty()) {
         graphicsView->loadFromFile(fileName);
     }
+//        QString file = "saveTest.xml";
+//        if (!file.isEmpty()) {
+//            graphicsView->loadFromXml(file);
+//        }
 }
 
 void MainWindow::onOldPos(QString data)
@@ -127,4 +247,27 @@ void MainWindow::onUndoPos(QString data)
 void MainWindow::onRedoPos(QString data)
 {
     RedoData->setText(data);
+}
+
+void MainWindow::updateResult(const QString &result)
+{
+    status->setText("Result : " + result);
+}
+
+void MainWindow::zoomIn()
+{
+    zoomFactor *= 1.5;
+    graphicsView->scale(1.5, 1.5);
+}
+
+void MainWindow::zoomOut()
+{
+    zoomFactor /= 1.5;
+    graphicsView->scale(1.0 / 1.5, 1.0 / 1.5);
+}
+
+void MainWindow::zoomToFit()
+{
+    graphicsView->fitInView(graphicsView->sceneRect(), Qt::KeepAspectRatio);
+    zoomFactor = 1.5;
 }
