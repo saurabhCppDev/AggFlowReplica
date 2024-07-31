@@ -13,6 +13,7 @@
 #include <QDomDocument>
 #include <QBuffer>
 
+
 CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     : QGraphicsView(parent)
     , scene(new QGraphicsScene(this))
@@ -233,6 +234,28 @@ void CustomGraphicsView::contextMenuEvent(QContextMenuEvent *event)
     contextMenu.exec(event->globalPos());
 }
 
+void CustomGraphicsView::wheelEvent(QWheelEvent *event)
+{
+    setTransformationAnchor(AnchorUnderMouse);
+    double scalefactor = 1.5;
+
+    if(event->modifiers() & Qt::ControlModifier)
+    {
+        if(event->delta() > 0)
+        {
+           scale(scalefactor,scalefactor);
+        }
+        else
+        {
+            scale(1/scalefactor,1/scalefactor);
+        }
+    }
+    else
+    {
+        QGraphicsView::wheelEvent(event);
+    }
+}
+
 void CustomGraphicsView::onActionSave()
 {
     // Action 1 triggered
@@ -280,6 +303,7 @@ void CustomGraphicsView::onSetValue()
 void CustomGraphicsView::onResult()
 {
     double result = 0.0;
+
     QSet<CustomPixmapItem*> visitItems;
 
     for (auto it = lineConnections.begin(); it != lineConnections.end(); ++it)
@@ -323,8 +347,7 @@ void CustomGraphicsView::onResult()
             }
         }
     }
-
-    qDebug() << "Result : " << result;
+    emit resultUpdated(QString::number(result));
 }
 
 void CustomGraphicsView::saveToFile(const QString &fileName)
@@ -454,7 +477,7 @@ void CustomGraphicsView::saveToXml(const QString &fileName)
     file.close();
 
     QMessageBox msgBox;
-    msgBox.setText("Data Saved Successfully!");
+    msgBox.setText("Data in Xml Saved Successfully!");
     msgBox.exec();
 }
 

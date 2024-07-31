@@ -9,6 +9,7 @@
 #include <QXmlStreamWriter>
 #include <QMessageBox>
 #include <QStatusBar>
+#include <QToolBar>
 
 
 MainWindow::MainWindow(QWidget *parent)
@@ -24,11 +25,13 @@ MainWindow::MainWindow(QWidget *parent)
     , RedoData(new QLabel)
     , status(new QLabel(this))
     ,currentFile("saveTest.scene")
+    ,zoomFactor(1.5)
 
 {
     SetupUI();
     createActions();
     createMenus();
+    createToolbar();
 
     connect(delegate, &CustomDelegate::sizeHintChanged, listView, &QListView::doItemsLayout);
     connect(clrBtn, &QPushButton::clicked, this, &MainWindow::OnClearClicked);
@@ -38,10 +41,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(graphicsView, &CustomGraphicsView::PublishUndoData, this, &MainWindow::onUndoPos);
     connect(graphicsView, &CustomGraphicsView::PublishRedoData, this, &MainWindow::onRedoPos);
+    connect(graphicsView, &CustomGraphicsView::resultUpdated, this, &MainWindow::updateResult);
 
-    resultAction = new QAction("Result", this);
-    menuBar()->addAction(resultAction);
-    connect(resultAction, &QAction::triggered, graphicsView, &CustomGraphicsView::onResult);
+    runAction = new QAction("Run", this);
+    menuBar()->addAction(runAction);
+
+    connect(runAction, &QAction::triggered, graphicsView, &CustomGraphicsView::onResult);
+    status->setText("Result : 0");
     statusBar()->addPermanentWidget(status);
 
 }
@@ -50,6 +56,7 @@ void MainWindow::OnClearClicked()
 {
     graphicsView->ClearScene();
     CustomPixmapItem::GlobalItemId = 0;
+    status->setText("Result : 0");
     statusBar()->showMessage(tr("Scene cleared"), 2000);
 }
 
@@ -80,11 +87,11 @@ void MainWindow::SetupUI()
     QHBoxLayout *hlayout = new QHBoxLayout(centralWidget);
     vlayout->addWidget(listView);
     vlayout->addWidget(clrBtn);
-//    vlayout->addWidget(oldData);
-//    vlayout->addWidget(newData);
-//    vlayout->addWidget(new QLabel("After Undo/Redo"));
-//    vlayout->addWidget(UndoData);
-//    vlayout->addWidget(RedoData);
+    //    vlayout->addWidget(oldData);
+    //    vlayout->addWidget(newData);
+    //    vlayout->addWidget(new QLabel("After Undo/Redo"));
+    //    vlayout->addWidget(UndoData);
+    //    vlayout->addWidget(RedoData);
     hlayout->addLayout(vlayout);
     hlayout->addWidget(graphicsView);
 
@@ -107,6 +114,12 @@ void MainWindow::createMenus()
     editMenu->addAction(undoAction);
     editMenu->addAction(redoAction);
     editMenu->addSeparator();
+
+    viewMenu = menuBar()->addMenu(tr("&View"));
+
+    viewMenu->addAction(zoomInAction);
+    viewMenu->addAction(zoomOutAction);
+    viewMenu->addSeparator();
 
 }
 
@@ -148,7 +161,34 @@ void MainWindow::createActions()
     redoAction->setIcon(QIcon(":/icons/images/redo.png"));
     connect(redoAction, &QAction::triggered, graphicsView, &CustomGraphicsView::RedoTriggered);
 
- }
+    zoomInAction = new QAction(tr("&Zoom In"), this);
+    zoomInAction->setStatusTip(tr("Zoom In"));
+    zoomInAction->setIcon(QIcon(":/icons/images/zoom_in.png"));
+    connect(zoomInAction, &QAction::triggered, this, &MainWindow::zoomIn);
+
+    zoomOutAction = new QAction(tr("&Zoom Out"), this);
+    zoomOutAction->setStatusTip(tr("Zoom Out"));
+    zoomOutAction->setIcon(QIcon(":/icons/images/zoom_out.png"));
+    connect(zoomOutAction, &QAction::triggered, this, &MainWindow::zoomOut);
+}
+
+void MainWindow::createToolbar()
+{
+    QToolBar *editToolBar;
+    editToolBar = addToolBar(tr("Edit"));
+    editToolBar->addAction(saveAction);
+    editToolBar->addSeparator();
+    editToolBar->addAction(undoAction);
+    editToolBar->addAction(redoAction);
+    editToolBar->addSeparator();
+    editToolBar->addAction(zoomInAction);
+    editToolBar->addAction(zoomOutAction);
+    editToolBar->addSeparator();
+    removeToolBar(editToolBar);
+    addToolBar(editToolBar);
+    editToolBar->show();
+
+}
 
 void MainWindow::setCurrentFile(const QString &fileName)
 {
@@ -164,17 +204,17 @@ void MainWindow::onSave()
         graphicsView->saveToFile(fileName);
     }
 
-//	QString file = "saveTest.xml";
-//    if (!file.isEmpty()) {
-//        graphicsView->saveToXml(file);
-//    }
+    QString file = "saveTest.xml";
+    if (!file.isEmpty()) {
+        graphicsView->saveToXml(file);
+    }
 }
 
 
 void MainWindow::onSaveAs()
 {
 
-    QString fileName = QFileDialog::getSaveFileName(this, tr("Save As File"), "", tr("XML Files (*.xml)"));
+    QString fileName = QFileDialog::getSaveFileName(this, tr("Save As File"), "", tr("XML Files (*.xml);;Scene Files(*.scene)"));
     if (fileName.isEmpty())
         return;
     setCurrentFile(fileName);
@@ -189,10 +229,10 @@ void MainWindow::onLoad()
     if (!fileName.isEmpty()) {
         graphicsView->loadFromFile(fileName);
     }
-//	QString file = "saveTest.xml";
-//    if (!file.isEmpty()) {
-//        graphicsView->loadFromXml(file);
-//    }
+//        QString file = "saveTest.xml";
+//        if (!file.isEmpty()) {
+//            graphicsView->loadFromXml(file);
+//        }
 }
 
 void MainWindow::onOldPos(QString data)
@@ -213,5 +253,22 @@ void MainWindow::onUndoPos(QString data)
 void MainWindow::onRedoPos(QString data)
 {
     RedoData->setText(data);
+}
+
+void MainWindow::updateResult(const QString &result)
+{
+    status->setText("Result : " + result);
+}
+
+void MainWindow::zoomIn()
+{
+    zoomFactor *= 1.5;
+    graphicsView->scale(1.5, 1.5);
+}
+
+void MainWindow::zoomOut()
+{
+    zoomFactor /= 1.5;
+    graphicsView->scale(1.0 / 1.5, 1.0 / 1.5);
 }
 

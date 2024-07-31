@@ -24,11 +24,15 @@ private slots:
     void onNewPos(QString data);
     void onUndoPos(QString data);
     void onRedoPos(QString data);
+    void updateResult(const QString &result);
+    void zoomIn();
+    void zoomOut();
 
 private:
     void SetupUI();
     void createMenus();
     void createActions();
+    void createToolbar();
     void setCurrentFile(const QString &fileName);
 
     QWidget *centralWidget;
@@ -44,6 +48,7 @@ private:
 
     QMenu *fileMenu;
     QMenu *editMenu;
+    QMenu *viewMenu;
     QMenu *resultMenu;
 
     QAction *saveAction;
@@ -53,9 +58,12 @@ private:
 
     QAction *undoAction;
     QAction *redoAction;
-    QAction *resultAction;
+    QAction *zoomInAction;
+    QAction *zoomOutAction;
+    QAction *runAction;
 
     QString currentFile;
+    qreal zoomFactor;
 
 };
 
