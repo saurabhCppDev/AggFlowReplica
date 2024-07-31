@@ -6,6 +6,12 @@
 #include "CustomGraphicsView.h"
 #include <customdelegate.h>
 #include <QPushButton>
+#include <QStandardItemModel>
+#include <QVector>
+#include <QIcon>
+#include <QLabel>
+#include <QStringList>
+#include <QList>
 
 class MainWindow : public QMainWindow
 {
@@ -22,12 +28,14 @@ private slots:
     void onNewPos(QString data);
     void onUndoPos(QString data);
     void onRedoPos(QString data);
+    void onItemClicked(const QModelIndex &index);
 
 private:
     void SetupUI();
 
     QWidget *centralWidget;
     QListView *listView;
+    QListView *menuListView;
     CustomDelegate *delegate;
     CustomGraphicsView *graphicsView;
     QPushButton* clrBtn;
@@ -35,6 +43,8 @@ private:
     QLabel* newData;
     QLabel* UndoData;
     QLabel* RedoData;
+
+
 };
 
 #endif // MAINWINDOW_H
