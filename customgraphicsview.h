@@ -48,6 +48,9 @@ private slots:
     void onActionSave();
     void onActionDelete();
     void onSetValue();
+    void onAddCustomText();
+    void onCopyVal();
+    void onPasteVal();
 
 public slots:
     void saveToFile(const QString &fileName);
@@ -74,8 +77,24 @@ private:
     QAction *acnSetVal;
     QAction *acnResult;
     QGraphicsItem *selectedItem = nullptr;
+    CustomPixmapItem *copiedItem;
     QPointF itemStartPosition;
     QUndoStack* UndoStack;
+
+    //dropdown
+    QAction *acnfrontEndLoader;
+    QAction *acnCutVal;
+    QAction *acnCopyVal;
+    QAction *acnPasteVal;
+    QAction *acnSetVal;
+    QAction *acnDelItem;
+    QAction *acnMonitor;
+    QAction *acnFlipView;
+    QAction *acnAddCustomText;
+    QAction *acnMaxPlantProd;
+    QAction *acnViewResult;
+    QAction *acnAdjFeedStream;
+
 };
 
 #endif // CUSTOMGRAPHICSVIEW_H

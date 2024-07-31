@@ -25,12 +25,33 @@ CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     scene->setSceneRect(0, 0,600,400);
 
     acnSave = new QAction(tr("Save Not Yet Implemented"), this);
-    acnDel = new QAction(tr("Delete line"), this);
-    acnSetVal = new QAction(tr("Set value"), this);
+    acnDel = new QAction(QIcon(":/icons/images/delete.png"),"Delete line", this);
+    acnSetVal = new QAction(QIcon(":/icons/images/assign-id.png"),"Assign Machine Id...", this);
+    acnCutVal = new QAction(QIcon(":/icons/images/scissor.png"),"Cut",this);
+    acnCopyVal = new QAction(QIcon(":/icons/images/copy.png"),"Copy",this);
+    acnDelItem = new QAction(QIcon(":/icons/images/delete.png"),"Delete",this);
+    acnMonitor = new QAction(QIcon(":/icons/images/monitor.png"),"Monitor",this);
+    acnFlipView = new QAction(QIcon(":/icons/images/flip.png"),"Flip",this);
+    acnAddCustomText = new QAction(QIcon(":/icons/images/assign-text.png"),"Assign Name",this);
+    acnMaxPlantProd = new QAction(QIcon(":/icons/images/plant.png"),"Maximize Plant Production",this);
+    acnViewResult = new QAction(QIcon(":/icons/images/result.png"),"View Results",this);
+    acnAdjFeedStream = new QAction(QIcon(":/icons/images/adjust.png"),"Adjust Feed Stream",this);
+    acnfrontEndLoader = new QAction(tr(">>> Front End Loader <<<"),this);
+    acnPasteVal = new QAction(tr("Paste"),this);
 
     connect(acnSave, &QAction::triggered, this, &CustomGraphicsView::onActionSave);
     connect(acnDel, &QAction::triggered, this, &CustomGraphicsView::onActionDelete);
     connect(acnSetVal, &QAction::triggered, this, &CustomGraphicsView::onSetValue);
+    connect(acnCutVal, &QAction::triggered, this, &CustomGraphicsView::onSetValue);
+    connect(acnCopyVal, &QAction::triggered, this, &CustomGraphicsView::onCopyVal);
+    connect(acnDelItem, &QAction::triggered, this, &CustomGraphicsView::onActionDelete);
+    connect(acnMonitor, &QAction::triggered, this, &CustomGraphicsView::onSetValue);
+    connect(acnFlipView, &QAction::triggered, this, &CustomGraphicsView::onSetValue);
+    connect(acnAddCustomText, &QAction::triggered, this, &CustomGraphicsView::onAddCustomText);
+    connect(acnMaxPlantProd, &QAction::triggered, this, &CustomGraphicsView::onSetValue);
+    connect(acnViewResult, &QAction::triggered, this, &CustomGraphicsView::onSetValue);
+    connect(acnPasteVal, &QAction::triggered, this, &CustomGraphicsView::onPasteVal);
+
     connect(this, &CustomGraphicsView::UndoTriggered, UndoStack, &QUndoStack::undo);
     connect(this, &CustomGraphicsView::RedoTriggered, UndoStack, &QUndoStack::redo);
 }
@@ -173,13 +194,33 @@ void CustomGraphicsView::mouseReleaseEvent(QMouseEvent *event)
 void CustomGraphicsView::mouseDoubleClickEvent(QMouseEvent *event)
 {
     contextMenu.clear();
+
     QList<QGraphicsItem *> lst = items(event->pos());
-    for(QGraphicsItem* item:lst)
+    for(QGraphicsItem* item : lst)
     {
         CustomPixmapItem *widget = dynamic_cast<CustomPixmapItem *>(item);
         if(widget)
         {
+            contextMenu.addAction(acnfrontEndLoader);
+            contextMenu.addSeparator();
+
+            contextMenu.addAction(acnAdjFeedStream);
+            contextMenu.addAction(acnViewResult);
+            contextMenu.addSeparator();
+
+            contextMenu.addAction(acnMaxPlantProd);
+            contextMenu.addSeparator();
+
+            contextMenu.addAction(acnMonitor);
+            contextMenu.addAction(acnFlipView);
+            contextMenu.addAction(acnAddCustomText);
             contextMenu.addAction(acnSetVal);
+            contextMenu.addSeparator();
+
+            contextMenu.addAction(acnCutVal);
+            contextMenu.addAction(acnCopyVal);
+            contextMenu.addAction(acnPasteVal);
+            contextMenu.addAction(acnDelItem);
             selectedItem = widget;
         }
     }
@@ -289,6 +330,45 @@ void CustomGraphicsView::onSetValue()
     {
         double value = QInputDialog::getDouble(this, "Enter Value:", "Operation:", 0, 0, 1000, 2, nullptr);
         item->SetText(QString::number(value));
+    }
+}
+
+void CustomGraphicsView::onAddCustomText()
+{
+    CustomPixmapItem* item = dynamic_cast<CustomPixmapItem *>(selectedItem);
+    if(item){
+        bool ok;
+        QString value = QInputDialog::getText(this, "Enter Text", "Name:", QLineEdit::Normal, QString(), &ok);
+        if (ok && !value.isEmpty()){
+            item->SetText(value);
+        }
+    }
+}
+void CustomGraphicsView::onCopyVal()
+{
+    if (selectedItem) {
+        CustomPixmapItem* itemToCopy = dynamic_cast<CustomPixmapItem*>(selectedItem);
+        if (itemToCopy) {
+            CustomPixmapItem* copied = itemToCopy->clone();
+            //CustomPixmapItem* copied = new CustomPixmapItem(itemToCopy);
+            if(copied){
+
+                copied->setPos(mapToScene(selectedItem->scenePos().x(),selectedItem->scenePos().y() ));
+                scene->addItem(copied);
+                emit PublishNewData(QString("(%1, %2)").arg(copied->pos().x()).arg(copied->pos().y()));
+                AddItemToMoveStack(copied);
+            }
+        }
+    }
+}
+
+void CustomGraphicsView::onPasteVal()
+{
+    if (copiedItem)
+    {
+        AddItemToMoveStack(copiedItem);
+        scene->addItem(copiedItem);
+        copiedItem = nullptr;
     }
 }
 
