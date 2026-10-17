@@ -136,7 +136,7 @@ QVariant CustomPixmapItem::itemChange(GraphicsItemChange change, const QVariant 
 
 void CustomPixmapItem::write(QDataStream &out) const {
     out << pos();
-    out << PixmapLabel->pixmap()->toImage();
+    out << PixmapLabel->pixmap().toImage();
     out << TextLabel->text();
     out << CustomPixmapItem::GlobalItemId;
     out << ItemId;

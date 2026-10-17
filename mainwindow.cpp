@@ -93,7 +93,6 @@ void MainWindow::SetupUI()
     menuListView->setFixedWidth(60);
     menuListView->setIconSize(QSize(50, 50));
 
-    clrBtn->setFixedWidth(50);
     setCentralWidget(centralWidget);
     QVBoxLayout *vlayout = new QVBoxLayout();
     QHBoxLayout *hlayout = new QHBoxLayout(centralWidget);
@@ -216,12 +215,6 @@ void MainWindow::setCurrentFile(const QString &fileName)
     currentFile = fileName;
     setWindowModified(false);
     setWindowFilePath(currentFile.isEmpty() ? tr("untitled.xml") : currentFile);
-}
-
-
-void MainWindow::OnClearClicked()
-{
-    graphicsView->ClearScene();
 }
 
 void MainWindow::onSave()

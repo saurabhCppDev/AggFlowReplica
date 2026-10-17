@@ -12,6 +12,8 @@
 #include <QApplication>
 #include <QDomDocument>
 #include <QBuffer>
+#include <QFile>
+#include <QTextStream>
 
 CustomGraphicsView::CustomGraphicsView(QWidget *parent)
     : QGraphicsView(parent)
@@ -21,7 +23,7 @@ CustomGraphicsView::CustomGraphicsView(QWidget *parent)
 {
     setScene(scene);
     setAcceptDrops(true);
-    setRenderHints(QPainter::HighQualityAntialiasing);
+    setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
     scene->setSceneRect(0, 0,600,400);
 
     acnSave = new QAction(tr("Save Not Yet Implemented"), this);
@@ -275,7 +277,7 @@ void CustomGraphicsView::wheelEvent(QWheelEvent *event)
 
     if(event->modifiers() & Qt::ControlModifier)
     {
-        if(event->delta() > 0)
+        if(event->angleDelta().y() > 0)
         {
            scale(scalefactor,scalefactor);
         }

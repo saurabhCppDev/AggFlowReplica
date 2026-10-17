@@ -36,8 +36,8 @@ public:
     int GetItemId();
     void HideLabelIfNeeded();
 
-    int pixmapWidth() const { return PixmapLabel->pixmap()->width(); }
-    int pixmapHeight() const { return PixmapLabel->pixmap()->height(); }
+    int pixmapWidth() const { return PixmapLabel->pixmap().width(); }
+    int pixmapHeight() const { return PixmapLabel->pixmap().height(); }
 
     QGraphicsEllipseItem *GetStartCircle() const;
     QGraphicsEllipseItem *GetEndCircle() const;
