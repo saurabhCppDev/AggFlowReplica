@@ -1,0 +1,39 @@
+# Build directories (qmake shadow builds)
+build/
+build-*/
+debug/
+release/
+
+# Qt Creator user-specific files
+*.pro.user
+*.pro.user.*
+*.qmlproject.user
+*.qmlproject.user.*
+.qmake.stash
+
+# qmake / build artifacts
+Makefile
+Makefile.*
+*.o
+*.obj
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+object_script.*
+
+# Compiled binaries
+*.exe
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# IDE / editor
+.vscode/
+.idea/
+*.autosave
+
+# OS generated files
+Thumbs.db
+.DS_Store
